@@ -117,7 +117,7 @@
         </div>
         <div class="chat-users better-scrollbar">
             <ul id="user-list" data-bind="foreach: filteredChatUsers">
-                <li>
+                <li data-bind="click: $parent.joinSingleRoom.bind($parent, $data)">
                     <div class="user-inner">
                         <div class="left-side">
                             <img src="~/Content/icons/avatar1.png" data-bind="attr: { src:$data.avatar }" class="user-avatar" />
@@ -125,7 +125,12 @@
                         <div class="right-side">
                             <input type="hidden" class="username" data-bind="value:$data.userName" />
                             <span class="author" data-bind="text: $data.displayName"></span>
-                            <small data-bind="text: $data.device"></small>
+                            <!-- ko if: $data.device -->
+                            <span class="dot"></span>
+                            <!-- /ko -->
+
+                            @*<small data-bind="text: $data.device"></small>*@
+
                         </div>
                     </div>
                 </li>
@@ -139,7 +144,7 @@
 
 <!-- CREATE ROOM MODAL -->
 <div class="modal" id="create-room-modal">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="width: 70%!important">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" data-bind="click: closeRoom">&times;</button>
@@ -160,7 +165,8 @@
                     <h3>Danh sách thành viên được chọn</h3>
                     <div class="list-group" data-bind="foreach: userSelected">
                         <div style="height: 45px;">
-                            <p data-bind="text: $data.displayName" style="float:left"></p>
+                            <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data)">Xóa</button>
                         </div>
                     </div>
                 </div>

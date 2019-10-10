@@ -20,7 +20,7 @@ namespace Chat.Web.Hubs
         public readonly static List<UserViewModel> _Connections = new List<UserViewModel>();
 
         /// <summary>
-        /// List of users
+        /// List of all users
         /// </summary>
         public readonly static List<UserViewModel> _Users = new List<UserViewModel>();
 
@@ -36,41 +36,82 @@ namespace Chat.Web.Hubs
         private readonly static Dictionary<string, string> _ConnectionsMap = new Dictionary<string, string>();
         #endregion
 
-        public void Send(string roomName, string message)
+        public void Send(string roomName, string fromUserId, string toUserId, string message)
         {
-            if (message.StartsWith("/private"))
-                SendPrivate(message);
-            else
+            if(roomName != null)
+            {
                 SendToRoom(roomName, message);
+            }
+            else
+            {
+                SendPrivate(message, fromUserId, toUserId);
+            }
         }
 
-        public void SendPrivate(string message)
+        public void SendPrivate(string message, string fromUserId, string toUserId)
         {
-            // message format: /private(receiverName) Lorem ipsum...
-            string[] split = message.Split(')');
-            string receiver = split[0].Split('(')[1];
-            string userId;
-            if (_ConnectionsMap.TryGetValue(receiver, out userId))
+            try
             {
-                // Who is the sender;
-                var sender = _Connections.Where(u => u.Username == IdentityName).First();
-
-                message = Regex.Replace(message, @"\/private\(.*?\)", string.Empty).Trim();
-
-                // Build the message
-                MessageViewModel messageViewModel = new MessageViewModel()
+                using (var db = new ApplicationDbContext())
                 {
-                    From = sender.DisplayName,
-                    Avatar = sender.Avatar,
-                    To = "",
-                    Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
-                    Timestamp = DateTime.Now.ToLongTimeString()
-                };
+                    var userSender = db.Users.Where(u => u.Id == fromUserId).FirstOrDefault();
+                    var userReceiver = db.Users.Where(u => u.Id == toUserId).FirstOrDefault();
 
-                // Send the message
-                Clients.Client(userId).newMessage(messageViewModel);
-                Clients.Caller.newMessage(messageViewModel);
+                    // Create and save message in database
+                    Message msg = new Message()
+                    {
+                        Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
+                        Timestamp = DateTime.Now.Ticks.ToString(),
+                        FromUser = userSender,
+                        ToUser = userReceiver,
+                    };
+                    db.Messages.Add(msg);
+                    db.SaveChanges();
+
+
+                    message = Regex.Replace(message, @"\/private\(.*?\)", string.Empty).Trim();
+
+                    // Build the message
+                    MessageViewModel messageViewModel = new MessageViewModel()
+                    {
+                        From = userSender.DisplayName,
+                        Avatar = userSender.Avatar,
+                        To = userReceiver.DisplayName,
+                        Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
+                        Timestamp = DateTime.Now.ToLongTimeString()
+                    };
+
+                    try
+                    {
+                        string userId;
+
+                        if (_ConnectionsMap.TryGetValue(userReceiver.UserName, out userId))
+                        {
+                            // Who is the sender;
+                            var sender = _Connections.Where(u => u.Username == IdentityName).First();
+
+                            // Send the message
+                            Clients.Client(userId).newMessage(messageViewModel);
+                            Clients.Caller.newMessage(messageViewModel);
+                        }
+                        else
+                        {
+                            Clients.Caller.newMessage(messageViewModel);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Clients.Caller.newMessage(messageViewModel);
+                    }
+
+
+                }
             }
+            catch (Exception)
+            {
+                Clients.Caller.onError("Message not send!");
+            }
+            
         }
 
         public void SendToRoom(string roomName, string message)
@@ -196,18 +237,33 @@ namespace Chat.Web.Hubs
             }
         }
 
-        public IEnumerable<MessageViewModel> GetMessageHistory(string roomName)
+        public IEnumerable<MessageViewModel> GetMessageHistory(string roomName, string fromUserId, string toUserId)
         {
+            
             using (var db = new ApplicationDbContext())
             {
-                var messageHistory = db.Messages.Where(m => m.ToRoom.Name == roomName)
+                if (roomName != null)
+                {
+
+                    var messageHistory = db.Messages.Where(m => m.ToRoom.Name == roomName)
                     .OrderByDescending(m => m.Timestamp)
                     .Take(20)
                     .AsEnumerable()
                     .Reverse()
                     .ToList();
-
-                return Mapper.Map<IEnumerable<Message>, IEnumerable<MessageViewModel>>(messageHistory);
+                    return Mapper.Map<IEnumerable<Message>, IEnumerable<MessageViewModel>>(messageHistory);
+                }
+                else if(fromUserId != null && toUserId != null)
+                {
+                    var messageHistory = db.Messages.Where(m => (m.FromUserId == fromUserId && m.ToUserId == toUserId) || (m.FromUserId == toUserId && m.ToUserId == fromUserId))
+                    .OrderByDescending(m => m.Timestamp)
+                    .Take(20)
+                    .AsEnumerable()
+                    .Reverse()
+                    .ToList();
+                    return Mapper.Map<IEnumerable<Message>, IEnumerable<MessageViewModel>>(messageHistory);
+                }
+                return null;
             }
         }
 
@@ -227,25 +283,11 @@ namespace Chat.Web.Hubs
                 }
             }
             return _UsersRoom.Where(u => u.UserId == userId);
-            //using (var db = new ApplicationDbContext())
-            //{
-            //    // First run?
-            //    if (_Rooms.Count == 0)
-            //    {
-            //        foreach (var room in db.Rooms)
-            //        {
-            //            var roomViewModel = Mapper.Map<Room, RoomViewModel>(room);
-            //            _Rooms.Add(roomViewModel);
-            //        }
-            //    }
-            //}
-
-            //return _Rooms.ToList();
         }
 
-        public IEnumerable<UserViewModel> GetUsers(string roomName)
+        public IEnumerable<UserViewModel> GetOnlineUsers()
         {
-            return _Connections.Where(u => u.CurrentRoom == roomName).ToList();
+            return _Users;
         }
 
         public IEnumerable<UserRoomViewModel> GetUsersRoom(int roomId)
@@ -299,6 +341,7 @@ namespace Chat.Web.Hubs
 
         public IEnumerable<UserViewModel> GetAllUsers()
         {
+            List<UserViewModel> _Users = new List<UserViewModel>();
             using (var db = new ApplicationDbContext())
             {
                 //First run?
@@ -320,6 +363,20 @@ namespace Chat.Web.Hubs
         {
             using (var db = new ApplicationDbContext())
             {
+                // First run?
+                if (_Users.Count == 0)
+                {
+                    foreach (ApplicationUser user in db.Users.ToList())
+                    {
+                        UserViewModel userViewModel = Mapper.Map<ApplicationUser, UserViewModel>(user);
+                        _Users.Add(userViewModel);
+                    }
+                }
+            }
+
+
+            using (var db = new ApplicationDbContext())
+            {
                 try
                 {
                     var user = db.Users.Where(u => u.UserName == IdentityName).FirstOrDefault();
@@ -328,6 +385,10 @@ namespace Chat.Web.Hubs
                     userViewModel.Device = GetDevice();
                     userViewModel.CurrentRoom = "";
 
+                    var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+                    _Users.Remove(tempUser);
+
+                    _Users.Add(userViewModel);
                     _Connections.Add(userViewModel);
                     _ConnectionsMap.Add(IdentityName, Context.ConnectionId);
 
@@ -344,9 +405,16 @@ namespace Chat.Web.Hubs
 
         public override Task OnDisconnected(bool stopCalled)
         {
+            
             try
             {
-                var user = _Connections.Where(u => u.Username == IdentityName).First();
+                var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+                _Users.Remove(tempUser);
+
+                tempUser.Device = "";
+                _Users.Add(tempUser);
+
+                var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
                 _Connections.Remove(user);
 
                 // Tell other users to remove you from their list
@@ -354,6 +422,7 @@ namespace Chat.Web.Hubs
 
                 // Remove mapping
                 _ConnectionsMap.Remove(user.Username);
+                
             }
             catch (Exception ex)
             {
@@ -365,9 +434,14 @@ namespace Chat.Web.Hubs
 
         public override Task OnReconnected()
         {
-            var user = _Connections.Where(u => u.Username == IdentityName).First();
+            var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+            _Users.Remove(tempUser);
+
+            var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
             Clients.Caller.getProfileInfo(user.Id, user.DisplayName, user.Avatar);
 
+
+            _Users.Add(user);
             return base.OnReconnected();
         }
         #endregion
