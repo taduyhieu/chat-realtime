@@ -9,8 +9,8 @@
             text = text.split(")")[1];
         }
 
-        text = "/private(" + username + ") " + text;
-        input.val(text);
+        //text = "/private(" + username + ") " + text;
+        //input.val(text);
         input.focus();
     });
 
@@ -41,9 +41,11 @@
     $("#btnUpload").change(function () {
 
         var data = new FormData();
+        let userReceiverId = $("#userReceiverId").val();
         var file = document.getElementById("btnUpload").files[0];
         data.append("btnUpload", file);
-
+        data.append("userReceiverId", userReceiverId);
+        console.log(data);
         $.ajax({
             type: "POST",
             url: '/Home/Upload',
@@ -52,10 +54,10 @@
             contentType: false,
             processData: false,
             success: function (response) {
-                alert(response);
+                console.log(response);
             },
             error: function (error) {
-                alert(error);
+                console.log(error);
             }
         });
 

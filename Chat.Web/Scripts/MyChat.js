@@ -7,7 +7,7 @@
         model.userList();
         model.userRoomList();
         model.userAllList();
-        model.joinedRoom = "Lobby";
+        model.joinedRoom = "Home";
         model.joinRoom(null);
     });
 
@@ -123,31 +123,32 @@
             }
         });
 
-        self.filteredChatUsers = ko.computed(function () {
-            console.log("change");
-            var ch = false;
-            var changedItem = null;
+        //self.filteredChatUsers = ko.computed(function () {
+        //    console.log("change");
+        //    var ch = false;
+        //    var changedItem = null;
 
-            ko.utils.arrayForEach(self.chatUsers(), function (user) {
-                var changed = user.device(); //someAChanged registers a change subscription here
+        //    ko.utils.arrayForEach(self.chatUsers(), function (user) {
+        //        var changed = user.device(); //someAChanged registers a change subscription here
 
-                if (changed && !ch) {
-                    ch = true;
-                    changedItem = user;
-                }
-            });
+        //        if (changed && !ch) {
+        //            ch = true;
+        //            changedItem = user;
+        //        }
+        //    });
 
-            return changedItem;
-        });
+        //    return changedItem;
+        //});
     };
 
     Model.prototype = {
 
         // Server Operations
         sendNewMessage: function () {
+            console.log("send");
             var self = this;
             let room;
-            if (self.joinedRoom == "Lobby") {
+            if (self.joinedRoom == "Home") {
                 room = null;
             }
             else {
@@ -172,9 +173,12 @@
 
         joinSingleRoom: function (toUser) {
             var self = this;
+            $("#joinedRoom").html("<b>" + toUser.displayName() + "</b>");
+            $("#userReceiverId").val(toUser.id());
+
             self.toUserId(toUser.id());
             let toUserId = toUser.id();
-            chatHub.server.join("Lobby").done(function () {
+            chatHub.server.join("Home").done(function () {
                 self.messageHistory(self.myUserId(), toUserId);
             });
         },

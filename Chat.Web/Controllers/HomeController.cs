@@ -32,7 +32,11 @@ namespace Chat.Web.Controllers
                 try
                 {
                     var file = Request.Files[0];
-
+                    var userReceiverId = "";
+                    if (Request.Params["userReceiverId"] != null)
+                    {
+                        userReceiverId = Request.Params["userReceiverId"];
+                    }
                     // Some basic checks...
                     if (file != null && !FileValidator.ValidSize(file.ContentLength))
                         return Json("File size too big. Maximum File Size: 500KB");
@@ -55,17 +59,41 @@ namespace Chat.Web.Controllers
                             // Get sender & chat room
                             var senderViewModel = ChatHub._Connections.Where(u => u.Username == User.Identity.Name).FirstOrDefault();
                             var sender = db.Users.Where(u => u.UserName == senderViewModel.Username).FirstOrDefault();
-                            var room = db.Rooms.Where(r => r.Name == senderViewModel.CurrentRoom).FirstOrDefault();
+                            var receiver = new ApplicationUser();
+                            var room = new Room();
+                            if (userReceiverId != null && userReceiverId != "")
+                            {
+                                receiver = db.Users.Where(u => u.Id == userReceiverId).FirstOrDefault();
+                            }
+                            else
+                            {
+                                room = db.Rooms.Where(r => r.Name == senderViewModel.CurrentRoom).FirstOrDefault();
+                            }
+
 
                             // Build message
-                            Message msg = new Message()
+                            Message msg = new Message();
+                            if (receiver != null)
                             {
-                                Content = Regex.Replace(htmlImage, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
-                                Timestamp = DateTime.Now.Ticks.ToString(),
-                                FromUser = sender,
-                                ToRoom = room
-                            };
-
+                                msg = new Message()
+                                {
+                                    Content = Regex.Replace(htmlImage, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
+                                    Timestamp = DateTime.Now.Ticks.ToString(),
+                                    FromUser = sender,
+                                    ToUser = receiver,
+                                };
+                            }
+                            else
+                            {
+                                msg = new Message()
+                                {
+                                    Content = Regex.Replace(htmlImage, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
+                                    Timestamp = DateTime.Now.Ticks.ToString(),
+                                    FromUser = sender,
+                                    ToRoom = room,
+                                };
+                            }
+                            
                             db.Messages.Add(msg);
                             db.SaveChanges();
 

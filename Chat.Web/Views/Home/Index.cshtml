@@ -45,7 +45,7 @@
     </div>
     <div class="col-md-7 middle">
         <div class="chat-header">
-            <h5 id="joinedRoom">Lobby{<span id="userRoom"></span>}</h5>
+            <h5 id="joinedRoom">Home</h5>
             @*<ul id="userRoom">
             </ul>*@
             <button data-toggle="modal" data-target="#remove-room-modal" class="btnDeleteRoom glyphicon glyphicon-remove"></button>
@@ -75,6 +75,7 @@
                 <label for="btnUpload" class="custom-file-upload">
                     <img src="~/Content/icons/photo1.png" alt="" />
                 </label>
+                <input type="hidden" id="userReceiverId" value="" />
                 <input type="file" id="btnUpload" accept="image/*" name="files" />
                 <a id="emojibtn" href="#"><img src="~/Content/icons/smile1.png" /></a>
             </div>
@@ -108,7 +109,7 @@
                     <img src="~/Content/emojis/emoji7.png" />
                 </a>
             </div>
-            <input id="chat-message" type="text" value="" data-bind="value:message, valueUpdate: 'afterkeydown', event: { keypress: onEnter }" placeholder="What's on your mind?" />
+            <input id="chat-message" type="text" value="" data-bind="value:message, valueUpdate: 'afterkeydown', event: { keypress: onEnter }" placeholder="Type mesage here...." />
         </div>
     </div>
     <div class="col-md-3 right">
