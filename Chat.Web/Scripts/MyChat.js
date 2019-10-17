@@ -7,8 +7,7 @@
         model.userList();
         model.userRoomList();
         model.userAllList();
-        model.joinedRoom.id = 0;
-        model.joinedRoom.name = "Home";
+        model.joinedRoom = "Home";
         model.joinRoom(null);
     });
 
@@ -97,11 +96,7 @@
         self.userSelected = ko.observableArray([]);
         self.userCreateRoom = ko.observableArray([]);
         self.chatMessages = ko.observableArray([]);
-        self.joinedRoom = {
-            id: ko.observable(""),
-            name: ko.observable(""),
-        };
-        // self.joinedRoom = ko.observable("");
+        self.joinedRoom = ko.observable("");
         self.serverInfoMessage = ko.observable("");
         self.myName = ko.observable("");
         self.myAvatar = ko.observable("");
