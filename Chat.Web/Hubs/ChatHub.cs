@@ -69,18 +69,18 @@ namespace Chat.Web.Hubs
                     db.SaveChanges();
 
 
-                    message = Regex.Replace(message, @"\/private\(.*?\)", string.Empty).Trim();
+                    //message = Regex.Replace(message, @"\/private\(.*?\)", string.Empty).Trim();
 
                     // Build the message
-                    MessageViewModel messageViewModel = new MessageViewModel()
-                    {
-                        From = userSender.DisplayName,
-                        Avatar = userSender.Avatar,
-                        To = userReceiver.DisplayName,
-                        Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
-                        Timestamp = DateTime.Now.ToLongTimeString()
-                    };
-
+                    //MessageViewModel messageViewModel = new MessageViewModel()
+                    //{
+                    //    From = userSender.DisplayName,
+                    //    Avatar = userSender.Avatar,
+                    //    To = userReceiver.DisplayName,
+                    //    Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
+                    //    Timestamp = DateTime.Now.ToLongTimeString()
+                    //};
+                    var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
                     try
                     {
                         string userId;

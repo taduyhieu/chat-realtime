@@ -7,7 +7,8 @@
         model.userList();
         model.userRoomList();
         model.userAllList();
-        model.joinedRoom = "Home";
+        model.joinedRoom.id = 0;
+        model.joinedRoom.name = "Home";
         model.joinRoom(null);
     });
 
@@ -96,15 +97,22 @@
         self.userSelected = ko.observableArray([]);
         self.userCreateRoom = ko.observableArray([]);
         self.chatMessages = ko.observableArray([]);
-        self.joinedRoom = ko.observable("");
+        self.joinedRoom = {
+            id: ko.observable(""),
+            name: ko.observable(""),
+        };
+        // self.joinedRoom = ko.observable("");
         self.serverInfoMessage = ko.observable("");
         self.myName = ko.observable("");
         self.myAvatar = ko.observable("");
         self.myUserId = ko.observable("");
         self.toUserId = ko.observable("");
         self.onEnter = function (d, e) {
+            console.log("enter");
             if (e.keyCode === 13) {
-                self.sendNewMessage();
+                if (self.message() != null && self.message() != "") {
+                    self.sendNewMessage();
+                }
             }
             return true;
         }
@@ -145,8 +153,9 @@
 
         // Server Operations
         sendNewMessage: function () {
-            console.log("send");
+            
             var self = this;
+            console.log(self.message());
             let room;
             if (self.joinedRoom == "Home") {
                 room = null;
@@ -154,7 +163,7 @@
             else {
                 room = self.joinedRoom;
             }
-            chatHub.server.send(room, self.myUserId(), self.toUserId(),self.message());
+            chatHub.server.send(room, self.myUserId(), self.toUserId(), self.message());
             self.message("");
         },
 
