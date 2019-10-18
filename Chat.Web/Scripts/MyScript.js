@@ -39,10 +39,12 @@
 
     // Upload image with Ajax
     $("#btnUpload").change(function () {
-
+        console.log("hieu");
         var data = new FormData();
         let userReceiverId = $("#userReceiverId").val();
         var file = document.getElementById("btnUpload").files[0];
+        console.log(file);
+        console.log(userReceiverId);
         data.append("btnUpload", file);
         data.append("userReceiverId", userReceiverId);
         console.log(data);
@@ -61,7 +63,7 @@
             }
         });
 
-        console.log(files);
+        
 
     });
 });

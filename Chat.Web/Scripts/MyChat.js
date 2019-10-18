@@ -61,6 +61,8 @@
         $("input#iRoom").val(roomName);
         $("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
         $('#room-list a').removeClass('active');
+
+        $("#userReceiverId").val("");
         $(this).addClass('active');
     });
 
