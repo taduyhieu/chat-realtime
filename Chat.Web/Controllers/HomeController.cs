@@ -67,7 +67,7 @@ namespace Chat.Web.Controllers
                             }
                             else
                             {
-                                room = db.Rooms.Where(r => r.Name == senderViewModel.CurrentRoom).FirstOrDefault();
+                                room = db.Rooms.Where(r => r.Id == senderViewModel.CurrentRoomId).FirstOrDefault();
                             }
 
 
@@ -100,7 +100,7 @@ namespace Chat.Web.Controllers
                             // Send image-message to group
                             var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
                             var hub = GlobalHost.ConnectionManager.GetHubContext<ChatHub>();
-                            hub.Clients.Group(senderViewModel.CurrentRoom).newMessage(messageViewModel);
+                            hub.Clients.Group(senderViewModel.CurrentRoomId.ToString()).newMessage(messageViewModel);
                         }
 
                         return Json("Success");

@@ -7,7 +7,8 @@
         model.userList();
         model.userRoomList();
         model.userAllList();
-        model.joinedRoom = "Home";
+        model.joinedRoom.id = 0;
+        model.joinedRoom.name = "Home";
         model.joinRoom(null);
     });
 
@@ -54,13 +55,7 @@
     });
 
     $('ul#room-list').on('click', 'a', function () {
-        var roomName = $(this).text();
-        model.joinedRoom = roomName;
-        model.joinRoom();
-        model.chatMessages.removeAll();
-        $("input#iRoom").val(roomName);
-        $("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
-        $('#room-list a').removeClass('active');
+        
         $(this).addClass('active');
     });
 
@@ -96,7 +91,10 @@
         self.userSelected = ko.observableArray([]);
         self.userCreateRoom = ko.observableArray([]);
         self.chatMessages = ko.observableArray([]);
-        self.joinedRoom = ko.observable("");
+        self.joinedRoom = {
+            id: ko.observable(""),
+            name: ko.observable(""),
+        }
         self.serverInfoMessage = ko.observable("");
         self.myName = ko.observable("");
         self.myAvatar = ko.observable("");
@@ -152,25 +150,34 @@
             var self = this;
             console.log(self.message());
             let room;
-            if (self.joinedRoom == "Home") {
+            if (self.joinedRoom.id == 0) {
                 room = null;
             }
             else {
                 room = self.joinedRoom;
             }
-            chatHub.server.send(room, self.myUserId(), self.toUserId(), self.message());
+            chatHub.server.send(room.id, self.myUserId(), self.toUserId(), self.message());
             self.message("");
         },
 
         joinRoom: function (room) {
-            let roomId;
-            if (room) {
-                roomId = room.roomId();
-            }
             var self = this;
-            chatHub.server.join(self.joinedRoom).done(function () {
+
+            $("input#iRoom").val(roomName);
+            $("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
+            $('#room-list a').removeClass('active');
+
+            if (room) {
+                self.joinedRoom.id = room.roomId() ? room.roomId() : 0 ;
+                self.joinedRoom.name = room.name() ? room.name() : "";
+            }
+            console.log(self.joinedRoom.id);
+            
+            self.chatMessages.removeAll();
+            
+            chatHub.server.join(self.joinedRoom.id).done(function () {
                 //self.userList();
-                self.userRoomList(roomId);
+                self.userRoomList(self.joinedRoom.id);
                 self.messageHistory(null, null);
             });
         },
@@ -298,29 +305,34 @@
 
         deleteRoom: function () {
             var self = this;
-            chatHub.server.deleteRoom(self.joinedRoom);
+            chatHub.server.deleteRoom(self.joinedRoom.id);
         },
 
         messageHistory: function (fromUserId = null, toUserId = null) {
             var self = this;
+            let roomId;
             if (fromUserId != null && toUserId != null) {
-                room = null;
+                roomId = null;
             }
             else { 
-                room = self.joinedRoom;
+                roomId = self.joinedRoom.id;
             }
-            chatHub.server.getMessageHistory(room, fromUserId, toUserId).done(function (result) {
+            chatHub.server.getMessageHistory(roomId, fromUserId, toUserId).done(function (result) {
+                console.log(result);
                 self.chatMessages.removeAll();
-                for (var i = 0; i < result.length; i++) {
-                    var isMine = result[i].From == self.myName();
-                    self.chatMessages.push(new ChatMessage(result[i].Content,
-                                                     result[i].Timestamp,
-                                                     result[i].From,
-                                                     isMine,
-                                                     result[i].Avatar))
-                }
+                if (result) {
+                    for (var i = 0; i < result.length; i++) {
+                        var isMine = result[i].From == self.myName();
+                        self.chatMessages.push(new ChatMessage(result[i].Content,
+                            result[i].Timestamp,
+                            result[i].From,
+                            isMine,
+                            result[i].Avatar))
+                    }
 
-                $(".chat-body").animate({ scrollTop: $(".chat-body")[0].scrollHeight }, 1000);
+                    $(".chat-body").animate({ scrollTop: $(".chat-body")[0].scrollHeight }, 1000);
+                }
+                
 
             });
         },

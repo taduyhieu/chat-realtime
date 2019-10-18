@@ -36,11 +36,11 @@ namespace Chat.Web.Hubs
         private readonly static Dictionary<string, string> _ConnectionsMap = new Dictionary<string, string>();
         #endregion
 
-        public void Send(string roomName, string fromUserId, string toUserId, string message)
+        public void Send(int roomId, string fromUserId, string toUserId, string message)
         {
-            if(roomName != null)
+            if(roomId != 0 && roomId != null)
             {
-                SendToRoom(roomName, message);
+                SendToRoom(roomId, message);
             }
             else
             {
@@ -114,14 +114,14 @@ namespace Chat.Web.Hubs
             
         }
 
-        public void SendToRoom(string roomName, string message)
+        public void SendToRoom(int roomId, string message)
         {
             try
             {
                 using (var db = new ApplicationDbContext())
                 {
                     var user = db.Users.Where(u => u.UserName == IdentityName).FirstOrDefault();
-                    var room = db.Rooms.Where(r => r.Name == roomName).FirstOrDefault();
+                    var room = db.Rooms.Where(r => r.Id == roomId).FirstOrDefault();
 
                     // Create and save message in database
                     Message msg = new Message()
@@ -136,7 +136,7 @@ namespace Chat.Web.Hubs
 
                     // Broadcast the message
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
-                    Clients.Group(roomName).newMessage(messageViewModel);
+                    Clients.Group(roomId.ToString()).newMessage(messageViewModel);
                 }
             }
             catch (Exception)
@@ -145,24 +145,24 @@ namespace Chat.Web.Hubs
             }
         }
 
-        public void Join(string roomName)
+        public void Join(int roomId)
         {
             try
             {
                 var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
-                if (user.CurrentRoom != roomName)
+                if (user.CurrentRoomId != roomId)
                 {
                     // Remove user from others list
-                    if (!string.IsNullOrEmpty(user.CurrentRoom))
-                        Clients.OthersInGroup(user.CurrentRoom).removeUser(user);
+                    if (!string.IsNullOrEmpty(user.CurrentRoomId.ToString()))
+                        Clients.OthersInGroup(user.CurrentRoomId.ToString()).removeUser(user);
 
                     // Join to new chat room
-                    Leave(user.CurrentRoom);
-                    Groups.Add(Context.ConnectionId, roomName);
-                    user.CurrentRoom = roomName;
+                    Leave(user.CurrentRoomId);
+                    Groups.Add(Context.ConnectionId, roomId.ToString());
+                    user.CurrentRoomId = roomId;
 
                     // Tell others to update their list of users
-                    Clients.OthersInGroup(roomName).addUser(user);
+                    Clients.OthersInGroup(roomId.ToString()).addUser(user);
                 }
             }
             catch (Exception ex)
@@ -171,9 +171,9 @@ namespace Chat.Web.Hubs
             }
         }
 
-        private void Leave(string roomName)
+        private void Leave(int roomId)
         {
-            Groups.Remove(Context.ConnectionId, roomName);
+            Groups.Remove(Context.ConnectionId, roomId.ToString());
         }
 
         public int CreateRoom(string roomName)
@@ -209,23 +209,23 @@ namespace Chat.Web.Hubs
             }
             return 0;
         }
-        public void DeleteRoom(string roomName)
+        public void DeleteRoom(int roomId)
         {
             try
             {
                 using (var db = new ApplicationDbContext())
                 {
                     // Delete from database
-                    var room = db.Rooms.Where(r => r.Name == roomName && r.UserAccount.UserName == IdentityName).FirstOrDefault();
+                    var room = db.Rooms.Where(r => r.Id == roomId && r.UserAccount.UserName == IdentityName).FirstOrDefault();
                     db.Rooms.Remove(room);
                     db.SaveChanges();
 
                     // Delete from list
-                    var roomViewModel = _Rooms.First<RoomViewModel>(r => r.Name == roomName);
+                    var roomViewModel = _Rooms.First<RoomViewModel>(r => r.Id == roomId);
                     _Rooms.Remove(roomViewModel);
 
                     // Move users back to Lobby
-                    Clients.Group(roomName).onRoomDeleted(string.Format("Room {0} has been deleted.\nYou are now moved to the Lobby!", roomName));
+                    Clients.Group(roomId.ToString()).onRoomDeleted(string.Format("Room {0} has been deleted.\nYou are now moved to the Lobby!", roomId));
 
                     // Tell all users to update their room list
                     Clients.All.removeChatRoom(roomViewModel);
@@ -237,15 +237,15 @@ namespace Chat.Web.Hubs
             }
         }
 
-        public IEnumerable<MessageViewModel> GetMessageHistory(string roomName, string fromUserId, string toUserId)
+        public IEnumerable<MessageViewModel> GetMessageHistory(int roomId, string fromUserId, string toUserId)
         {
             
             using (var db = new ApplicationDbContext())
             {
-                if (roomName != null)
+                if (roomId != 0 && roomId != null)
                 {
 
-                    var messageHistory = db.Messages.Where(m => m.ToRoom.Name == roomName)
+                    var messageHistory = db.Messages.Where(m => m.ToRoom.Id == roomId)
                     .OrderByDescending(m => m.Timestamp)
                     .Take(20)
                     .AsEnumerable()
@@ -383,7 +383,8 @@ namespace Chat.Web.Hubs
 
                     var userViewModel = Mapper.Map<ApplicationUser, UserViewModel>(user);
                     userViewModel.Device = GetDevice();
-                    userViewModel.CurrentRoom = "";
+                    userViewModel.CurrentRoomId = 0;
+                    userViewModel.CurrentRoomName = "";
 
                     var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
                     _Users.Remove(tempUser);
@@ -418,7 +419,7 @@ namespace Chat.Web.Hubs
                 _Connections.Remove(user);
 
                 // Tell other users to remove you from their list
-                Clients.OthersInGroup(user.CurrentRoom).removeUser(user);
+                Clients.OthersInGroup(user.CurrentRoomId.ToString()).removeUser(user);
 
                 // Remove mapping
                 _ConnectionsMap.Remove(user.Username);
@@ -434,14 +435,14 @@ namespace Chat.Web.Hubs
 
         public override Task OnReconnected()
         {
-            var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
-            _Users.Remove(tempUser);
+            //var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+            //_Users.Remove(tempUser);
 
             var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
             Clients.Caller.getProfileInfo(user.Id, user.DisplayName, user.Avatar);
 
 
-            _Users.Add(user);
+            //_Users.Add(user);
             return base.OnReconnected();
         }
         #endregion

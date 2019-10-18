@@ -11,7 +11,8 @@ namespace Chat.Web.Models.ViewModels
         public string Username { get; set; }
         public string DisplayName { get; set; }
         public string Avatar { get; set; }
-        public string CurrentRoom { get; set; }
+        public int CurrentRoomId { get; set; }
+        public string CurrentRoomName { get; set; }
         public string Device { get; set; }
     }
 }

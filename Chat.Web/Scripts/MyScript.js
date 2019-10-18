@@ -43,6 +43,8 @@
         var data = new FormData();
         let userReceiverId = $("#userReceiverId").val();
         var file = document.getElementById("btnUpload").files[0];
+        console.log(userReceiverId);
+        console.log(files);
         data.append("btnUpload", file);
         data.append("userReceiverId", userReceiverId);
         console.log(data);
@@ -61,7 +63,7 @@
             }
         });
 
-        console.log(files);
+        
 
     });
 });
