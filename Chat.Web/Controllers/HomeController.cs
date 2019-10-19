@@ -32,10 +32,13 @@ namespace Chat.Web.Controllers
                 try
                 {
                     var file = Request.Files[0];
-                    var userReceiverId = "";
-                    if (Request.Params["userReceiverId"] != null)
+                    string userReceiverId = "";
+                    if (Request.Params.Count > 0)
                     {
-                        userReceiverId = Request.Params["userReceiverId"];
+                        if (Request.Params["userReceiverId"] != null)
+                        {
+                            userReceiverId = Request.Params["userReceiverId"];
+                        }
                     }
                     // Some basic checks...
                     if (file != null && !FileValidator.ValidSize(file.ContentLength))
@@ -59,7 +62,7 @@ namespace Chat.Web.Controllers
                             // Get sender & chat room
                             var senderViewModel = ChatHub._Connections.Where(u => u.Username == User.Identity.Name).FirstOrDefault();
                             var sender = db.Users.Where(u => u.UserName == senderViewModel.Username).FirstOrDefault();
-                            var receiver = new ApplicationUser();
+                            ApplicationUser receiver = null;
                             var room = new Room();
                             if (userReceiverId != null && userReceiverId != "")
                             {
