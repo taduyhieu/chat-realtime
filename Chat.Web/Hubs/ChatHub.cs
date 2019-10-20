@@ -239,12 +239,10 @@ namespace Chat.Web.Hubs
 
         public IEnumerable<MessageViewModel> GetMessageHistory(int roomId, string fromUserId, string toUserId)
         {
-            
             using (var db = new ApplicationDbContext())
             {
                 if (roomId != 0 && roomId != null)
                 {
-
                     var messageHistory = db.Messages.Where(m => m.ToRoom.Id == roomId)
                     .OrderByDescending(m => m.Timestamp)
                     .Take(20)
@@ -253,7 +251,7 @@ namespace Chat.Web.Hubs
                     .ToList();
                     return Mapper.Map<IEnumerable<Message>, IEnumerable<MessageViewModel>>(messageHistory);
                 }
-                else if(fromUserId != null && toUserId != null)
+                else if (fromUserId != "" && toUserId != "")
                 {
                     var messageHistory = db.Messages.Where(m => (m.FromUserId == fromUserId && m.ToUserId == toUserId) || (m.FromUserId == toUserId && m.ToUserId == fromUserId))
                     .OrderByDescending(m => m.Timestamp)
@@ -263,8 +261,12 @@ namespace Chat.Web.Hubs
                     .ToList();
                     return Mapper.Map<IEnumerable<Message>, IEnumerable<MessageViewModel>>(messageHistory);
                 }
-                return null;
+                else
+                {
+                    return null;
+                }
             }
+            return null;
         }
 
         public IEnumerable<UserRoomViewModel> GetRooms(string userId)

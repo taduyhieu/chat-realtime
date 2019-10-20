@@ -56,13 +56,13 @@
 
     $('ul#room-list').on('click', 'a', function () {
 
-        var roomName = $(this).text();
-        model.joinedRoom = roomName;
-        model.joinRoom();
-        model.chatMessages.removeAll();
-        $("input#iRoom").val(roomName);
-        $("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
-        $('#room-list a').removeClass('active');
+        //var roomName = $(this).text();
+        //model.joinedRoom = roomName;
+        //model.joinRoom();
+        //model.chatMessages.removeAll();
+        //$("input#iRoom").val(roomName);
+        //$("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
+        //$('#room-list a').removeClass('active');
 
         $("#userReceiverId").val("");
         $(this).addClass('active');
@@ -110,7 +110,6 @@
         self.myUserId = ko.observable("");
         self.toUserId = ko.observable("");
         self.onEnter = function (d, e) {
-            console.log("enter");
             if (e.keyCode === 13) {
                 if (self.message() != null && self.message() != "") {
                     self.sendNewMessage();
@@ -160,27 +159,36 @@
             console.log(self.message());
             let room;
             if (self.joinedRoom.id == 0) {
-                room = null;
+                roomId = null;
             }
             else {
-                room = self.joinedRoom;
+                roomId = self.joinedRoom.id;
             }
-            chatHub.server.send(room.id, self.myUserId(), self.toUserId(), self.message());
+            console.log(roomId);
+            console.log(self.myUserId());
+            console.log(self.toUserId());
+            console.log(self.message());
+            chatHub.server.send(roomId, self.myUserId(), self.toUserId(), self.message());
             self.message("");
         },
 
         joinRoom: function (room) {
+            console.log(room);
             var self = this;
-
-            $("input#iRoom").val(roomName);
-            $("#joinedRoom").html("<b>" + roomName + "</b>" + "{<span id='userRoom'></span>}");
+            if (room) {
+                $("input#iRoom").val(room.name());
+                $("#joinedRoom").html("<b>" + room.name() + "</b>" + "{<span id='userRoom'></span>}");
+            }
+            else {
+                $("input#iRoom").val("Trang chủ");
+                $("#joinedRoom").html("<b>" + "Trang chủ" + "</b>");
+            }
             $('#room-list a').removeClass('active');
 
             if (room) {
                 self.joinedRoom.id = room.roomId() ? room.roomId() : 0 ;
                 self.joinedRoom.name = room.name() ? room.name() : "";
             }
-            console.log(self.joinedRoom.id);
             
             self.chatMessages.removeAll();
             
@@ -198,7 +206,9 @@
 
             self.toUserId(toUser.id());
             let toUserId = toUser.id();
-            chatHub.server.join("Home").done(function () {
+            chatHub.server.join(0).done(function () {
+                console.log(self.myUserId());
+                console.log(toUserId);
                 self.messageHistory(self.myUserId(), toUserId);
             });
         },
@@ -324,8 +334,12 @@
                 roomId = null;
             }
             else { 
+                console.log(self.joinedRoom.id);
                 roomId = self.joinedRoom.id;
             }
+            console.log(fromUserId);
+            console.log(toUserId);
+            console.log(roomId);
             chatHub.server.getMessageHistory(roomId, fromUserId, toUserId).done(function (result) {
                 console.log(result);
                 self.chatMessages.removeAll();
@@ -341,9 +355,10 @@
 
                     $(".chat-body").animate({ scrollTop: $(".chat-body")[0].scrollHeight }, 1000);
                 }
-                
-
-            });
+            }).fail(function (jqXHR, textStatus) {
+                console.log(jqXHR);
+                console.log(textStatus);
+            });;
         },
 
         roomAdded: function (room) {
