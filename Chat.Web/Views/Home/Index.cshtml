@@ -46,9 +46,7 @@
     <div class="col-md-7 middle">
         <div class="chat-header">
             <h5 id="joinedRoom">Home</h5>
-            @*<ul id="userRoom">
-            </ul>*@
-            <button data-toggle="modal" data-target="#remove-room-modal" class="btnDeleteRoom glyphicon glyphicon-remove"></button>
+            <button data-toggle="modal" data-target="#edit-room-modal" class="btnEditRoom glyphicon glyphicon-edit"></button>
         </div>
         <div class="chat-body better-scrollbar">
             <ul data-bind="foreach: chatMessages">
@@ -129,7 +127,6 @@
                             <!-- ko if: $data.device -->
                             <span class="dot"></span>
                             <!-- /ko -->
-
                             @*<small data-bind="text: $data.device"></small>*@
 
                         </div>
@@ -149,13 +146,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" data-bind="click: closeRoom">&times;</button>
-                <h4 class="modal-title" >Create Room</h4>
+                <h4 class="modal-title">Create Room</h4>
             </div>
             <div class="modal-body">
                 <input type="text" class="form-control" id="roomName" placeholder="Room name">
                 <div style=" width: 50%; float: left">
                     <h3>Danh sách thành viên</h3>
-                    <div class="list-group" data-bind="foreach: allUsers" >
+                    <div class="list-group" data-bind="foreach: allUsers">
                         <div style="height: 50px;">
                             <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
                             <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data)">Thêm</button>
@@ -171,7 +168,45 @@
                         </div>
                     </div>
                 </div>
-                
+
+            </div>
+            <div class="modal-footer" style="margin-top: 300px!important;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: closeRoom">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: createRoom">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+!-- EDIT ROOM MODAL -->
+<div class="modal" id="edit-room-modal">
+    <div class="modal-dialog" style="width: 70%!important">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" data-bind="click: closeRoom">&times;</button>
+                <h4 class="modal-title">Create Room</h4>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="roomName" placeholder="Room name">
+                <div style=" width: 50%; float: left">
+                    <h3>Danh sách thành viên</h3>
+                    <div class="list-group" data-bind="foreach: allUsers">
+                        <div style="height: 50px;">
+                            <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data)">Thêm</button>
+                        </div>
+                    </div>
+                </div>
+                <div style=" width: 50%; float: right">
+                    <h3>Danh sách thành viên được chọn</h3>
+                    <div class="list-group" data-bind="foreach: userSelected">
+                        <div style="height: 45px;">
+                            <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data)">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer" style="margin-top: 300px!important;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: closeRoom">Close</button>

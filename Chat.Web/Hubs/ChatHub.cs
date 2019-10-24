@@ -7,6 +7,7 @@ using Chat.Web.Models;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
+using System.Web.Script.Serialization;
 
 namespace Chat.Web.Hubs
 {
@@ -68,18 +69,6 @@ namespace Chat.Web.Hubs
                     db.Messages.Add(msg);
                     db.SaveChanges();
 
-
-                    //message = Regex.Replace(message, @"\/private\(.*?\)", string.Empty).Trim();
-
-                    // Build the message
-                    //MessageViewModel messageViewModel = new MessageViewModel()
-                    //{
-                    //    From = userSender.DisplayName,
-                    //    Avatar = userSender.Avatar,
-                    //    To = userReceiver.DisplayName,
-                    //    Content = Regex.Replace(message, @"(?i)<(?!img|a|/a|/img).*?>", String.Empty),
-                    //    Timestamp = DateTime.Now.ToLongTimeString()
-                    //};
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
                     try
                     {
@@ -101,6 +90,7 @@ namespace Chat.Web.Hubs
                     }
                     catch (Exception)
                     {
+                        Clients.Caller.newMessage(messageViewModel);
                         Clients.Caller.newMessage(messageViewModel);
                     }
 
@@ -176,7 +166,7 @@ namespace Chat.Web.Hubs
             Groups.Remove(Context.ConnectionId, roomId.ToString());
         }
 
-        public int CreateRoom(string roomName)
+        public int CreateRoom(string roomName, string userSelected)
         {
             try
             {
@@ -198,7 +188,23 @@ namespace Chat.Web.Hubs
                         // Update room list
                         var roomViewModel = Mapper.Map<Room, RoomViewModel>(room);
                         _Rooms.Add(roomViewModel);
-                        Clients.All.addChatRoom(roomViewModel);
+
+
+                        char[] spearatorUser = { '|' };
+                        char[] spearatorElement = { ';' };
+                        String[] arrayUserSelected = userSelected.Split(spearatorUser);
+
+                        for (var i = 0; i < arrayUserSelected.Length; i++)
+                        {
+                            String[] User = arrayUserSelected[i].Split(spearatorElement);
+                            this.AddUserToRoom(User[0], room.Id);
+
+                            string userId;
+                            if (_ConnectionsMap.TryGetValue(User[1], out userId))
+                            {
+                                Clients.Client(userId).addChatRoom(roomViewModel);
+                            }
+                        }
                     }
                     return room.Id;
                 } //using
@@ -315,7 +321,6 @@ namespace Chat.Web.Hubs
             {
                 using (var db = new ApplicationDbContext())
                 {
-                    
                     // Create and save chat room in database
                     // var user = db.Users.Where(u => u.UserName == IdentityName).FirstOrDefault();
                     var user = new UserRoom()
@@ -325,14 +330,6 @@ namespace Chat.Web.Hubs
                     };
                     db.UserRooms.Add(user);
                     db.SaveChanges();
-
-                    //if (room != null)
-                    //{
-                    //    // Update room list
-                    //    var roomViewModel = Mapper.Map<Room, RoomViewModel>(room);
-                    //    _Rooms.Add(roomViewModel);
-                    //    Clients.All.addChatRoom(roomViewModel);
-                    //}
                 }//using
             }
             catch (Exception ex)
@@ -395,7 +392,7 @@ namespace Chat.Web.Hubs
                     _Connections.Add(userViewModel);
                     _ConnectionsMap.Add(IdentityName, Context.ConnectionId);
 
-                    Clients.Caller.getProfileInfo(user.Id, user.DisplayName, user.Avatar);
+                    Clients.Caller.getProfileInfo(user.Id, user.UserName, user.DisplayName, user.Avatar);
                 }
                 catch (Exception ex)
                 {

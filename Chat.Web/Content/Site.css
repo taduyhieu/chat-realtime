@@ -284,6 +284,21 @@ span:hover {
 .main-container .middle .chat-header .btnDeleteRoom:hover {
   color: red;
 }
+
+.main-container .middle .chat-header .btnEditRoom {
+    position: absolute;
+    top: 12px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    color: #AAA;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.main-container .middle .chat-header .btnEditRoom:hover {
+    color: red;
+}
 .main-container .middle .chat-body {
   position: absolute;
   border-bottom: 1px solid #eee;
