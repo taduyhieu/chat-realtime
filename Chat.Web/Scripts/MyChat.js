@@ -113,6 +113,7 @@
         self.myUserId = ko.observable("");
         self.myUserName = ko.observable("");
         self.toUserId = ko.observable("");
+        self.editPermissionRoom = ko.observable("");
         self.onEnter = function (d, e) {
             if (e.keyCode === 13) {
                 if (self.message() != null && self.message() != "") {
@@ -239,7 +240,6 @@
             var self = this; 
 
             chatHub.server.getUsersRoom(roomId).done(function (result) {
-                console.log(result);
                 self.chatUserRooms.removeAll();
                 for (var i = 0; i < result.length; i++) {
                     $("#userRoom").append(result[i].DisplayName + ",");
@@ -253,7 +253,15 @@
                         result[i].Role,
                     ))
                 }
-                console.log(self.chatUserRooms);
+                self.editPermissionRoom = '0';
+                for (let i = 0; i < self.chatUserRooms().length; i++) {
+                    if (self.chatUserRooms()[i].id() == self.myUserId() && self.chatUserRooms()[i].roomRole() == 1) {
+                        self.editPermissionRoom = '1';
+                    }
+                }
+                if (self.editPermissionRoom == '1') {
+                    $('#edit-room').html('<button data-toggle="modal" data-target="#edit-room-modal" class="btnEditRoom glyphicon glyphicon-edit"></button>');
+                }
                 self.notChatUserRooms.removeAll();
                 for (let i = 0; i < self.allUsers().length; i++) {
                     let user_1 = self.allUsers()[i];
@@ -292,35 +300,25 @@
             var self = this;
             var name = $("#roomName").val();
             if (name != null && name != "") {
-                let userEditSelected = "";
-                for (var i = 0; i < self.chatUserRooms().length; i++) {
-                    userEditSelected += self.chatUserRooms()[i].id() + ";" + self.chatUserRooms()[i].userName() +"|";
+                let userSelected = "";
+                for (var i = 0; i < self.userSelected().length; i++) {
+                    userSelected += self.userSelected()[i].id() + ";" + self.userSelected()[i].userName() +"|";
                 }
-                userEditSelected += self.myUserId() + ";" + self.myUserName();
-
+                userSelected += self.myUserId() + ";" + self.myUserName();
                 chatHub.server.createRoom(name, userSelected).done(function (result) {
-                    //let roomId = result;
-                    //for (var i = 0; i < self.userSelected().length; i++) {
-                    //    let userId = self.userSelected()[i].id();
-                    //    chatHub.server.addUserToRoom(userId, roomId).done(function (result) {
-
-                    //    });
-                    //}
-                    //chatHub.server.addUserToRoom(self.myUserId(), roomId).done(function (result) {
-                    //    chatHub.server.getAllUsers().done(function (result) {
-                    //        self.allUsers.removeAll();
-                    //        self.userSelected.removeAll();
-                    //        for (var i = 0; i < result.length; i++) {
-                    //            self.allUsers.push(new ChatUser(
-                    //                result[i].Id,
-                    //                result[i].Username,
-                    //                result[i].DisplayName,
-                    //                result[i].Avatar,
-                    //                result[i].CurrentRoom,
-                    //                result[i].Device))
-                    //        }
-                    //    });
-                    //});
+                    chatHub.server.getAllUsers().done(function (result) {
+                        self.allUsers.removeAll();
+                        self.userSelected.removeAll();
+                        for (var i = 0; i < result.length; i++) {
+                            self.allUsers.push(new ChatUser(
+                                result[i].Id,
+                                result[i].UserName,
+                                result[i].DisplayName,
+                                result[i].Avatar,
+                                result[i].CurrentRoom,
+                                result[i].Device))
+                        }
+                    });
                 });
             }
             else {
@@ -334,34 +332,15 @@
             var roomId = $("#editedRoomId").val();
             if (roomId != null && roomId != "") {
                 let userSelected = "";
-                console.log(self.chatUserRooms());
                 for (var i = 0; i < self.chatUserRooms().length; i++) {
                     userSelected += self.chatUserRooms()[i].id() + ";" + self.chatUserRooms()[i].userName() + "|";
                 }
-                console.log(userSelected);
                 chatHub.server.editRoom(roomId, userSelected).done(function (result) {
-                    //let roomId = result;
-                    //for (var i = 0; i < self.userSelected().length; i++) {
-                    //    let userId = self.userSelected()[i].id();
-                    //    chatHub.server.addUserToRoom(userId, roomId).done(function (result) {
-
-                    //    });
-                    //}
-                    //chatHub.server.addUserToRoom(self.myUserId(), roomId).done(function (result) {
-                    //    chatHub.server.getAllUsers().done(function (result) {
-                    //        self.allUsers.removeAll();
-                    //        self.userSelected.removeAll();
-                    //        for (var i = 0; i < result.length; i++) {
-                    //            self.allUsers.push(new ChatUser(
-                    //                result[i].Id,
-                    //                result[i].Username,
-                    //                result[i].DisplayName,
-                    //                result[i].Avatar,
-                    //                result[i].CurrentRoom,
-                    //                result[i].Device))
-                    //        }
-                    //    });
-                    //});
+                    let userRoom = "";
+                    for (var i = 0; i < self.chatUserRooms().length; i++) {
+                        userRoom += self.chatUserRooms()[i].displayName() + ',';
+                    }
+                    $("#userRoom").text(userRoom);
                 });
             }
             else {
@@ -457,7 +436,6 @@
             }
         },
         addUserToRoom: function (user, type) {
-            console.log(type);
             var self = this;
             if (type === 'create') {
                 self.allUsers.remove(user);
@@ -470,7 +448,6 @@
             
         },
         removeUserSelectedRoom: function (user, type) {
-            console.log(type);
             var self = this;
             if (type === 'create') {
                 self.userSelected.remove(user);
