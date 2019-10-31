@@ -207,6 +207,10 @@
     <Compile Include="Migrations\201909121538337_edituserRoomV2.Designer.cs">
       <DependentUpon>201909121538337_edituserRoomV2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201910261252307_addRoleUserRoom.cs" />
+    <Compile Include="Migrations\201910261252307_addRoleUserRoom.Designer.cs">
+      <DependentUpon>201910261252307_addRoleUserRoom.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\UserRoom.cs" />
@@ -319,6 +323,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201909121538337_edituserRoomV2.resx">
       <DependentUpon>201909121538337_edituserRoomV2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201910261252307_addRoleUserRoom.resx">
+      <DependentUpon>201910261252307_addRoleUserRoom.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

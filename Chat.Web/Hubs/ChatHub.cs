@@ -77,7 +77,7 @@ namespace Chat.Web.Hubs
                         if (_ConnectionsMap.TryGetValue(userReceiver.UserName, out userId))
                         {
                             // Who is the sender;
-                            var sender = _Connections.Where(u => u.Username == IdentityName).First();
+                            var sender = _Connections.Where(u => u.UserName == IdentityName).First();
 
                             // Send the message
                             Clients.Client(userId).newMessage(messageViewModel);
@@ -139,7 +139,7 @@ namespace Chat.Web.Hubs
         {
             try
             {
-                var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
+                var user = _Connections.Where(u => u.UserName == IdentityName).FirstOrDefault();
                 if (user.CurrentRoomId != roomId)
                 {
                     // Remove user from others list
@@ -197,7 +197,15 @@ namespace Chat.Web.Hubs
                         for (var i = 0; i < arrayUserSelected.Length; i++)
                         {
                             String[] User = arrayUserSelected[i].Split(spearatorElement);
-                            this.AddUserToRoom(User[0], room.Id);
+                            if(User[0] == user.Id)
+                            {
+                                this.AddUserToRoom(User[0], room.Id, 1);
+                            }
+                            else
+                            {
+                                this.AddUserToRoom(User[0], room.Id);
+                            }
+                            
 
                             string userId;
                             if (_ConnectionsMap.TryGetValue(User[1], out userId))
@@ -214,6 +222,69 @@ namespace Chat.Web.Hubs
                 Clients.Caller.onError("Couldn't create chat room: " + ex.Message);
             }
             return 0;
+        }
+
+        public void EditRoom(int roomId, string userEditSelected)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+
+                    // Create and save chat room in database
+                    var room = db.Rooms.Where(r => r.Id == roomId).FirstOrDefault();
+                    if (room != null)
+                    {
+                        var roomViewModel = Mapper.Map<Room, RoomViewModel>(room);
+                        //_Rooms.Add(roomViewModel);
+
+
+                        char[] spearatorUser = { '|' };
+                        char[] spearatorElement = { ';' };
+                        String[] arrayUserSelected = userEditSelected.Split(spearatorUser);
+                        String existUsers = null;
+                        String newUsers = null;
+                        for (var i = 0; i < arrayUserSelected.Length; i++)
+                        {
+                            String[] User = arrayUserSelected[i].Split(spearatorElement);
+                            newUsers += User[0] + "|";
+                        }
+
+                        string userId;
+                        foreach (UserRoom userRoom in db.UserRooms.Where(m => m.RoomId == roomId).ToList())
+                        {
+                            existUsers += userRoom.UserId + "|";
+
+                            if (!newUsers.ToLower().Contains(userRoom.UserId))
+                            {
+                                this.DeleteUserToRoom(userRoom.UserId, room.Id);
+                                if (_ConnectionsMap.TryGetValue(userRoom.User.UserName, out userId))
+                                {
+                                    Clients.Client(userId).removeChatRoom(roomViewModel);
+                                }
+                            }
+                            
+                        }
+
+                        for (var i = 0; i < arrayUserSelected.Length; i++)
+                        {
+                            String[] User = arrayUserSelected[i].Split(spearatorElement);
+                            if (!existUsers.ToLower().Contains(User[0])) {
+                                this.AddUserToRoom(User[0], room.Id);
+                                if (_ConnectionsMap.TryGetValue(User[1], out userId))
+                                {
+                                    Clients.Client(userId).addChatRoom(roomViewModel);
+                                }
+                            }
+                            
+                        }
+                    }
+                } //using
+            }
+            catch (Exception ex)
+            {
+                Clients.Caller.onError("Couldn't edit chat room: " + ex.Message);
+            }
         }
         public void DeleteRoom(int roomId)
         {
@@ -315,7 +386,25 @@ namespace Chat.Web.Hubs
             }
             return _UsersRoom.Where(u => u.RoomId == roomId);
         }
-        public void AddUserToRoom(string userId, int roomId)
+
+        public IEnumerable<UserRoomViewModel> GetNotUsersRoom(int roomId)
+        {
+            List<UserRoomViewModel> _UsersRoom = new List<UserRoomViewModel>();
+            using (var db = new ApplicationDbContext())
+            {
+                // First run?
+                if (_UsersRoom.Count == 0)
+                {
+                    foreach (UserRoom userRoom in db.UserRooms.ToList())
+                    {
+                        UserRoomViewModel UserRoomViewModel = Mapper.Map<UserRoom, UserRoomViewModel>(userRoom);
+                        _UsersRoom.Add(UserRoomViewModel);
+                    }
+                }
+            }
+            return _UsersRoom.Where(u => u.RoomId != roomId); ;
+        }
+        public void AddUserToRoom(string userId, int roomId, int role = 0)
         {
             try
             {
@@ -327,6 +416,7 @@ namespace Chat.Web.Hubs
                     {
                         UserId = userId,
                         RoomId = roomId,
+                        Role = role,
                     };
                     db.UserRooms.Add(user);
                     db.SaveChanges();
@@ -335,6 +425,23 @@ namespace Chat.Web.Hubs
             catch (Exception ex)
             {
                 Clients.Caller.onError("Couldn't create chat room: " + ex.Message);
+            }
+        }
+
+        public void DeleteUserToRoom(string userId, int roomId)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    var user = db.UserRooms.Where(r => r.RoomId == roomId && r.UserId == userId).FirstOrDefault();
+                    db.UserRooms.Remove(user);
+                    db.SaveChanges();
+                }//using
+            }
+            catch (Exception ex)
+            {
+                Clients.Caller.onError("Couldn't delete in room: " + ex.Message);
             }
         }
 
@@ -354,7 +461,7 @@ namespace Chat.Web.Hubs
                 }
             }
 
-            return _Users.Where(u => u.Username != IdentityName).ToList();
+            return _Users.Where(u => u.UserName != IdentityName).ToList();
         }
 
         #region OnConnected/OnDisconnected
@@ -385,7 +492,7 @@ namespace Chat.Web.Hubs
                     userViewModel.CurrentRoomId = 0;
                     userViewModel.CurrentRoomName = "";
 
-                    var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+                    var tempUser = _Users.Where(u => u.UserName == IdentityName).FirstOrDefault();
                     _Users.Remove(tempUser);
 
                     _Users.Add(userViewModel);
@@ -408,20 +515,20 @@ namespace Chat.Web.Hubs
             
             try
             {
-                var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
+                var tempUser = _Users.Where(u => u.UserName == IdentityName).FirstOrDefault();
                 _Users.Remove(tempUser);
 
                 tempUser.Device = "";
                 _Users.Add(tempUser);
 
-                var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
+                var user = _Connections.Where(u => u.UserName == IdentityName).FirstOrDefault();
                 _Connections.Remove(user);
 
                 // Tell other users to remove you from their list
                 Clients.OthersInGroup(user.CurrentRoomId.ToString()).removeUser(user);
 
                 // Remove mapping
-                _ConnectionsMap.Remove(user.Username);
+                _ConnectionsMap.Remove(user.UserName);
                 
             }
             catch (Exception ex)
@@ -437,7 +544,7 @@ namespace Chat.Web.Hubs
             //var tempUser = _Users.Where(u => u.Username == IdentityName).FirstOrDefault();
             //_Users.Remove(tempUser);
 
-            var user = _Connections.Where(u => u.Username == IdentityName).FirstOrDefault();
+            var user = _Connections.Where(u => u.UserName == IdentityName).FirstOrDefault();
             Clients.Caller.getProfileInfo(user.Id, user.DisplayName, user.Avatar);
 
 

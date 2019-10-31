@@ -40,7 +40,8 @@
             user.DisplayName,
             user.Avatar,
             user.CurrentRoom,
-            user.Device));
+            user.Device
+        ));
     };
 
     chatHub.client.removeUser = function (user) {
@@ -97,6 +98,7 @@
         self.chatRooms = ko.observableArray([]);
         self.chatUsers = ko.observableArray([]);
         self.chatUserRooms = ko.observableArray([]);
+        self.notChatUserRooms = ko.observableArray([]);
         self.allUsers = ko.observableArray([]);
         self.userSelected = ko.observableArray([]);
         self.userCreateRoom = ko.observableArray([]);
@@ -172,6 +174,8 @@
             var self = this;
             if (room) {
                 $("input#iRoom").val(room.name());
+                $("#editedRoomName").val(room.name());
+                $("#editedRoomId").val(room.roomId());
                 $("#joinedRoom").html("<b>" + room.name() + "</b>" + "{<span id='userRoom'></span>}");
             }
             else {
@@ -188,7 +192,6 @@
             self.chatMessages.removeAll();
             
             chatHub.server.join(self.joinedRoom.id).done(function () {
-                //self.userList();
                 self.userRoomList(self.joinedRoom.id);
                 self.messageHistory(null, null);
             });
@@ -222,7 +225,7 @@
                 for (var i = 0; i < result.length; i++) {
                     self.chatUsers.push(new ChatUser(
                         result[i].Id, 
-                        result[i].Username,
+                        result[i].UserName,
                         result[i].DisplayName,
                         result[i].Avatar,
                         result[i].CurrentRoom,
@@ -236,17 +239,34 @@
             var self = this; 
 
             chatHub.server.getUsersRoom(roomId).done(function (result) {
+                console.log(result);
                 self.chatUserRooms.removeAll();
                 for (var i = 0; i < result.length; i++) {
                     $("#userRoom").append(result[i].DisplayName + ",");
                     self.chatUserRooms.push(new ChatUser(
-                        result[i].Id,
-                        result[i].Username,
-                        result[i].DisplayName,
+                        result[i].UserId,
+                        result[i].UserName,
                         result[i].DisplayName,
                         result[i].Avatar,
                         null,
-                        null))
+                        null,
+                        result[i].Role,
+                    ))
+                }
+                console.log(self.chatUserRooms);
+                self.notChatUserRooms.removeAll();
+                for (let i = 0; i < self.allUsers().length; i++) {
+                    let user_1 = self.allUsers()[i];
+                    let exist = false;
+                    for (let j = 0; j < self.chatUserRooms().length; j++) {
+                        let user_2 = self.chatUserRooms()[j];
+                        if (user_1.id() == user_2.id()) {
+                            exist = true;
+                        }
+                    }
+                    if (!exist) {
+                        self.notChatUserRooms.push(user_1);
+                    }
                 }
             });
 
@@ -259,25 +279,24 @@
                 for (var i = 0; i < result.length; i++) {
                     self.allUsers.push(new ChatUser(
                         result[i].Id,
-                        result[i].Username,
+                        result[i].UserName,
                         result[i].DisplayName,
                         result[i].Avatar,
-                        result[i].CurrentRoom,
-                        result[i].Device))
+                        null,
+                        null))
                 }
             });
-
         },
 
         createRoom: function () {
             var self = this;
             var name = $("#roomName").val();
             if (name != null && name != "") {
-                let userSelected = "";
-                for (var i = 0; i < self.userSelected().length; i++) {
-                    userSelected += self.userSelected()[i].id() + ";" + self.userSelected()[i].userName() +"|";
+                let userEditSelected = "";
+                for (var i = 0; i < self.chatUserRooms().length; i++) {
+                    userEditSelected += self.chatUserRooms()[i].id() + ";" + self.chatUserRooms()[i].userName() +"|";
                 }
-                userSelected += self.myUserId() + ";" + self.myUserName();
+                userEditSelected += self.myUserId() + ";" + self.myUserName();
 
                 chatHub.server.createRoom(name, userSelected).done(function (result) {
                     //let roomId = result;
@@ -308,6 +327,47 @@
                 console.log("Tên phòng không được để trống!");
             }
             
+        },
+
+        editRoom: function () {
+            var self = this;
+            var roomId = $("#editedRoomId").val();
+            if (roomId != null && roomId != "") {
+                let userSelected = "";
+                console.log(self.chatUserRooms());
+                for (var i = 0; i < self.chatUserRooms().length; i++) {
+                    userSelected += self.chatUserRooms()[i].id() + ";" + self.chatUserRooms()[i].userName() + "|";
+                }
+                console.log(userSelected);
+                chatHub.server.editRoom(roomId, userSelected).done(function (result) {
+                    //let roomId = result;
+                    //for (var i = 0; i < self.userSelected().length; i++) {
+                    //    let userId = self.userSelected()[i].id();
+                    //    chatHub.server.addUserToRoom(userId, roomId).done(function (result) {
+
+                    //    });
+                    //}
+                    //chatHub.server.addUserToRoom(self.myUserId(), roomId).done(function (result) {
+                    //    chatHub.server.getAllUsers().done(function (result) {
+                    //        self.allUsers.removeAll();
+                    //        self.userSelected.removeAll();
+                    //        for (var i = 0; i < result.length; i++) {
+                    //            self.allUsers.push(new ChatUser(
+                    //                result[i].Id,
+                    //                result[i].Username,
+                    //                result[i].DisplayName,
+                    //                result[i].Avatar,
+                    //                result[i].CurrentRoom,
+                    //                result[i].Device))
+                    //        }
+                    //    });
+                    //});
+                });
+            }
+            else {
+                console.log("Tên phòng không được để trống!");
+            }
+
         },
 
         closeRoom: function () {
@@ -396,15 +456,30 @@
                 }
             }
         },
-        addUserToRoom: function (user) {
+        addUserToRoom: function (user, type) {
+            console.log(type);
             var self = this;
-            self.allUsers.remove(user);
-            self.userSelected.push(user);
+            if (type === 'create') {
+                self.allUsers.remove(user);
+                self.userSelected.push(user);
+            }
+            else if (type === 'edit') {
+                self.notChatUserRooms.remove(user);
+                self.chatUserRooms.push(user);
+            }
+            
         },
-        removeUserSelectedRoom: function (user) {
+        removeUserSelectedRoom: function (user, type) {
+            console.log(type);
             var self = this;
-            self.userSelected.remove(user);
-            self.allUsers.push(user);
+            if (type === 'create') {
+                self.userSelected.remove(user);
+                self.allUsers.push(user);
+            }
+            else if (type === 'edit') {
+                self.notChatUserRooms.push(user);
+                self.chatUserRooms.remove(user);
+            }
         },
     };
 
@@ -415,7 +490,7 @@
         self.name = ko.observable(name);
     }
 
-    function ChatUser(id = null, userName, displayName, avatar, currentRoom, device) {
+    function ChatUser(id = null, userName, displayName, avatar, currentRoom, device, roomRole = null) {
         var self = this;
         self.id = ko.observable(id);
         self.userName = ko.observable(userName);
@@ -423,6 +498,7 @@
         self.avatar = ko.observable(avatar);
         self.currentRoom = ko.observable(currentRoom);
         self.device = ko.observable(device);
+        self.roomRole = ko.observable(roomRole);
     }
 
     function ChatMessage(content, timestamp, from, isMine, avatar) {

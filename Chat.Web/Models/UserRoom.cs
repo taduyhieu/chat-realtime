@@ -20,5 +20,8 @@ namespace Chat.Web.Models
         [Column(Order = 2)]
         public int RoomId { get; set; }
         public virtual Room Room { get; set; }
+
+        [Column(Order = 3)]
+        public int Role { get; set; }
     }
 }

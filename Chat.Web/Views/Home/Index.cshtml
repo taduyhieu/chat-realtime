@@ -112,7 +112,7 @@
     </div>
     <div class="col-md-3 right">
         <div class="header">
-            <h5>LIST FRIENDS (<span data-bind="text: filteredChatUsers().length">0</span>)</h5>
+            <h5>ALL FRIENDS (<span data-bind="text: filteredChatUsers().length">0</span>)</h5>
         </div>
         <div class="chat-users better-scrollbar">
             <ul id="user-list" data-bind="foreach: filteredChatUsers">
@@ -155,7 +155,7 @@
                     <div class="list-group" data-bind="foreach: allUsers">
                         <div style="height: 50px;">
                             <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
-                            <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data)">Thêm</button>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data, 'create')">Thêm</button>
                         </div>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
                     <div class="list-group" data-bind="foreach: userSelected">
                         <div style="height: 45px;">
                             <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
-                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data)">Xóa</button>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data, 'create')">Xóa</button>
                         </div>
                     </div>
                 </div>
@@ -178,31 +178,39 @@
     </div>
 </div>
 
-!-- EDIT ROOM MODAL -->
+<!-- EDIT ROOM MODAL -->
 <div class="modal" id="edit-room-modal">
     <div class="modal-dialog" style="width: 70%!important">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" data-bind="click: closeRoom">&times;</button>
-                <h4 class="modal-title">Create Room</h4>
+                <h4 class="modal-title">Edit Room</h4>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control" id="roomName" placeholder="Room name">
+                <input type="hidden" class="form-control" id="editedRoomId" placeholder="Room name">
+                <input type="text" class="form-control" id="editedRoomName" placeholder="Room name">
                 <div style=" width: 50%; float: left">
                     <h3>Danh sách thành viên</h3>
-                    <div class="list-group" data-bind="foreach: allUsers">
+                    <div class="list-group" data-bind="foreach: notChatUserRooms">
                         <div style="height: 50px;">
                             <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
-                            <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data)">Thêm</button>
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.addUserToRoom.bind($parent, $data, 'edit')">Thêm</button>
                         </div>
                     </div>
                 </div>
                 <div style=" width: 50%; float: right">
-                    <h3>Danh sách thành viên được chọn</h3>
-                    <div class="list-group" data-bind="foreach: userSelected">
+                    <h3>Danh sách thành viên trong nhóm</h3>
+                    <div class="list-group" data-bind="foreach: chatUserRooms">
                         <div style="height: 45px;">
                             <p data-bind="text: $data.displayName" style="float:left; width: 60%"></p>
-                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data)">Xóa</button>
+                            <!-- ko if: $data.roomRole-->
+                            Quản trị viên
+
+                            <!-- /ko -->
+                            <!-- ko ifnot: $data.roomRole -->
+                            <button type="button" class="btn btn-primary" data-bind="click: $parent.removeUserSelectedRoom.bind($parent, $data, 'edit')">Xóa</button>
+                            <!-- /ko -->
+
                         </div>
                     </div>
                 </div>
@@ -210,7 +218,7 @@
             </div>
             <div class="modal-footer" style="margin-top: 300px!important;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: closeRoom">Close</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: createRoom">Create</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: editRoom">Update</button>
             </div>
         </div>
     </div>

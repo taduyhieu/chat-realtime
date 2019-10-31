@@ -13,7 +13,7 @@ namespace Chat.Web.Mappings
         public UserProfile()
         {
             CreateMap<ApplicationUser, UserViewModel>()
-                .ForMember(dst => dst.Username, opt => opt.MapFrom(x => x.UserName));
+                .ForMember(dst => dst.UserName, opt => opt.MapFrom(x => x.UserName));
         }
     }
 }

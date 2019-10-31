@@ -60,8 +60,8 @@ namespace Chat.Web.Controllers
                         using (var db = new ApplicationDbContext())
                         {
                             // Get sender & chat room
-                            var senderViewModel = ChatHub._Connections.Where(u => u.Username == User.Identity.Name).FirstOrDefault();
-                            var sender = db.Users.Where(u => u.UserName == senderViewModel.Username).FirstOrDefault();
+                            var senderViewModel = ChatHub._Connections.Where(u => u.UserName == User.Identity.Name).FirstOrDefault();
+                            var sender = db.Users.Where(u => u.UserName == senderViewModel.UserName).FirstOrDefault();
                             ApplicationUser receiver = null;
                             var room = new Room();
                             if (userReceiverId != null && userReceiverId != "")
