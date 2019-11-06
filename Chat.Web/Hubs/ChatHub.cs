@@ -37,19 +37,19 @@ namespace Chat.Web.Hubs
         private readonly static Dictionary<string, string> _ConnectionsMap = new Dictionary<string, string>();
         #endregion
 
-        public void Send(int roomId, string fromUserId, string toUserId, string message)
+        public int Send(int roomId, string fromUserId, string toUserId, string message)
         {
             if(roomId != 0 && roomId != null)
             {
-                SendToRoom(roomId, message);
+                return SendToRoom(roomId, message);
             }
             else
             {
-                SendPrivate(message, fromUserId, toUserId);
+                return SendPrivate(message, fromUserId, toUserId);
             }
         }
 
-        public void SendPrivate(string message, string fromUserId, string toUserId)
+        public int SendPrivate(string message, string fromUserId, string toUserId)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace Chat.Web.Hubs
                     };
                     db.Messages.Add(msg);
                     db.SaveChanges();
-
+                    int idMess = msg.Id; 
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
                     try
                     {
@@ -94,17 +94,17 @@ namespace Chat.Web.Hubs
                         Clients.Caller.newMessage(messageViewModel);
                     }
 
-
+                    return idMess;
                 }
             }
             catch (Exception)
             {
                 Clients.Caller.onError("Message not send!");
             }
-            
+            return 0;
         }
 
-        public void SendToRoom(int roomId, string message)
+        public int SendToRoom(int roomId, string message)
         {
             try
             {
@@ -123,16 +123,18 @@ namespace Chat.Web.Hubs
                     };
                     db.Messages.Add(msg);
                     db.SaveChanges();
-
+                    int idMess = msg.Id;
                     // Broadcast the message
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(msg);
                     Clients.Group(roomId.ToString()).newMessage(messageViewModel);
+                    return idMess;
                 }
             }
             catch (Exception)
             {
                 Clients.Caller.onError("Message not send!");
             }
+            return 0;
         }
 
         public void Join(int roomId)
@@ -286,7 +288,31 @@ namespace Chat.Web.Hubs
                 Clients.Caller.onError("Couldn't edit chat room: " + ex.Message);
             }
         }
-        public void DeleteRoom(int roomId)
+
+        public void StickMess(int Id)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    var message = db.Messages.Where(m => m.Id == Id).FirstOrDefault();
+                    var listMessages = db.Messages.Where(m => m.ToRoom.Id == message.ToRoom.Id && m.Id != Id).ToList();
+
+                    foreach (Message m in listMessages)
+                    {
+                        m.Stick = 0;
+                    }
+
+                    message.Stick = 1;
+                    db.SaveChanges();
+                }//using
+            }
+            catch (Exception ex)
+            {
+                Clients.Caller.onError("Couldn't pin message in room: " + ex.Message);
+            }
+        }
+            public void DeleteRoom(int roomId)
         {
             try
             {

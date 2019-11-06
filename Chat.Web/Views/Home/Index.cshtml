@@ -47,8 +47,9 @@
         <div class="chat-header">
             <h5 id="joinedRoom">Home</h5>
             <div id="edit-room">
-                
             </div>
+        </div>
+        <div id="pinnedMess">
         </div>
         <div class="chat-body better-scrollbar">
             <ul data-bind="foreach: chatMessages">
@@ -64,7 +65,12 @@
                                 <span data-bind="text:$data.timestamp"></span>
                             </span>
                             <span class="content" data-bind="html:$data.content"></span>
+
                         </div>
+                        <div class="stick-message">
+                            <a href="#" id="stick-message" data-bind="click: $parent.stickMess.bind($parent, $data)"><span class="glyphicon glyphicon-pushpin stick"></span></a>
+                        </div>
+                        
                     </div>
                 </li>
             </ul>

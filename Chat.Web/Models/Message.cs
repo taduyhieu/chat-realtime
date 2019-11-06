@@ -24,5 +24,6 @@ namespace Chat.Web.Models
         public virtual ApplicationUser  ToUser { get; set; }
 
         public virtual Room ToRoom { get; set; }
+        public int Stick { get; set;  }
     }
 }

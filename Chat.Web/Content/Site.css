@@ -303,8 +303,8 @@ span:hover {
   position: absolute;
   border-bottom: 1px solid #eee;
   width: 100%;
-  padding: 10px 0;
-  top: 40px;
+  padding: 25px 0;
+  top: 50px;
   bottom: 50px;
   background: white;
   float: left;
@@ -577,5 +577,29 @@ input[type="file"] {
     background-color: green;
     border-radius: 50%;
     display: inline-block;
+}
+.stick-message{
+    padding: 3px 8px;
+    display: table-cell;
+    min-width: 35px;
+    max-width: 500px;
+}
+.stick {
+    color: #157cce!important;
+}
+.ismine .stick-message{
+    float: right;
+}
+.pinnedMess {
+    position: absolute;
+    z-index: 100;
+    top: 40px;
+    left: 0px;
+    background: #ffffff;
+    width: 100%;
+    height: 45px;
+    border-bottom: 1px solid #80808073;
+    border-top: 1px solid #80808073;
+    padding-left: 10px;
 }
 /*# sourceMappingURL=Site.css.map */

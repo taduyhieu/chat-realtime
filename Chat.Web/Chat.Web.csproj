@@ -211,6 +211,14 @@
     <Compile Include="Migrations\201910261252307_addRoleUserRoom.Designer.cs">
       <DependentUpon>201910261252307_addRoleUserRoom.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201911041556222_AddStickMessage.cs" />
+    <Compile Include="Migrations\201911041556222_AddStickMessage.Designer.cs">
+      <DependentUpon>201911041556222_AddStickMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201911041557402_AddStickMessageSecond.cs" />
+    <Compile Include="Migrations\201911041557402_AddStickMessageSecond.Designer.cs">
+      <DependentUpon>201911041557402_AddStickMessageSecond.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\UserRoom.cs" />
@@ -326,6 +334,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201910261252307_addRoleUserRoom.resx">
       <DependentUpon>201910261252307_addRoleUserRoom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201911041556222_AddStickMessage.resx">
+      <DependentUpon>201911041556222_AddStickMessage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201911041557402_AddStickMessageSecond.resx">
+      <DependentUpon>201911041557402_AddStickMessageSecond.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
