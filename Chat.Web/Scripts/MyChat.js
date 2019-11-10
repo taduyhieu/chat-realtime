@@ -24,6 +24,7 @@ $(function () {
     };
 
     chatHub.client.pinMessage = function (messageView) {
+        console.log("change pin");
         var message = new ChatMessage(
             messageView.Id,
             messageView.Content,
@@ -37,7 +38,7 @@ $(function () {
     };
 
     chatHub.client.unpinMessage = function (messageView) {
-        console.log(messageView);
+        console.log("remove pin");
         model.unpinMess();
     };
     chatHub.client.newMessage = function (messageView) {
@@ -270,7 +271,7 @@ $(function () {
             self.pinnedMessages.content(mess.content());
             self.pinnedMessages.timestamp(mess.timestamp());
             self.pinnedMessages.from(mess.from());
-            self.pinnedMessages.isMine(mess.isMine());
+            self.pinnedMessages.isMine(null);
             self.pinnedMessages.avatar(mess.avatar());
             self.pinnedMessages.stick(mess.stick());
         },
@@ -288,29 +289,30 @@ $(function () {
         },
 
         stickMess: function (mess) {
-            console.log(mess);
             var self = this;
             chatHub.server.stickMess(mess.id()).done(function (result) {
-                self.pinnedMessages.id(mess.id());
-                self.pinnedMessages.content(mess.content());
-                self.pinnedMessages.timestamp(mess.timestamp());
-                self.pinnedMessages.from(mess.from());
-                self.pinnedMessages.isMine(mess.isMine());
-                self.pinnedMessages.avatar(mess.avatar());
-                self.pinnedMessages.stick(mess.stick());
+                console.log("done pin");
+                //self.pinnedMessages.id(mess.id());
+                //self.pinnedMessages.content(mess.content());
+                //self.pinnedMessages.timestamp(mess.timestamp());
+                //self.pinnedMessages.from(mess.from());
+                //self.pinnedMessages.isMine(mess.isMine());
+                //self.pinnedMessages.avatar(mess.avatar());
+                //self.pinnedMessages.stick(mess.stick());
             });
         },
 
         removeStickMessage: function () {
             var self = this;
             chatHub.server.removeStickMess(self.pinnedMessages.id()).done(function (result) {
-                self.pinnedMessages.id(null);
-                self.pinnedMessages.content(null);
-                self.pinnedMessages.timestamp(null);
-                self.pinnedMessages.from(null);
-                self.pinnedMessages.isMine(null);
-                self.pinnedMessages.avatar(null);
-                self.pinnedMessages.stick(null);
+                console.log("done unpin");
+                //self.pinnedMessages.id(null);
+                //self.pinnedMessages.content(null);
+                //self.pinnedMessages.timestamp(null);
+                //self.pinnedMessages.from(null);
+                //self.pinnedMessages.isMine(null);
+                //self.pinnedMessages.avatar(null);
+                //self.pinnedMessages.stick(null);
             });
         },
 

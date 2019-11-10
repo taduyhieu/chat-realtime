@@ -91,7 +91,6 @@ namespace Chat.Web.Hubs
                     catch (Exception)
                     {
                         Clients.Caller.newMessage(messageViewModel);
-                        Clients.Caller.newMessage(messageViewModel);
                     }
 
                     return idMess;
@@ -296,17 +295,55 @@ namespace Chat.Web.Hubs
                 using (var db = new ApplicationDbContext())
                 {
                     var message = db.Messages.Where(m => m.Id == Id).FirstOrDefault();
-                    var listMessages = db.Messages.Where(m => m.ToRoom.Id == message.ToRoom.Id && m.Id != Id).ToList();
-
-                    foreach (Message m in listMessages)
+                    if (message.ToRoom != null && message.ToRoom.Id > 0)
                     {
-                        m.Stick = 0;
+                        var listMessages = db.Messages.Where(m => m.ToRoom.Id == message.ToRoom.Id && m.Id != Id).ToList();
+
+                        foreach (Message m in listMessages)
+                        {
+                            m.Stick = 0;
+                        }
+                    } else
+                    {
+                        var listMessages_1 = db.Messages.Where(m => m.FromUser.Id == message.FromUser.Id && m.ToUser.Id == message.ToUser.Id && m.Id != Id).ToList();
+
+                        foreach (Message m in listMessages_1)
+                        {
+                            m.Stick = 0;
+                        }
+
+                        var listMessages_2= db.Messages.Where(m => m.FromUser.Id == message.ToUser.Id && m.ToUser.Id == message.FromUser.Id && m.Id != Id).ToList();
+
+                        foreach (Message m in listMessages_2)
+                        {
+                            m.Stick = 0;
+                        }
                     }
+                    
 
                     message.Stick = 1;
                     db.SaveChanges();
+
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(message);
-                    Clients.Group(message.ToRoom.Id.ToString()).pinMessage(messageViewModel);
+                    if (message.ToUser != null && message.ToUser.Id != "")
+                    {
+                        string userId;
+
+                        if (_ConnectionsMap.TryGetValue(message.ToUser.UserName.ToString(), out userId))
+                        {
+                            Clients.Client(userId).pinMessage(messageViewModel);
+                        }
+
+                        if (_ConnectionsMap.TryGetValue(message.FromUser.UserName.ToString(), out userId))
+                        {
+                            Clients.Client(userId).pinMessage(messageViewModel);
+                        }
+
+                    } else
+                    {
+                        Clients.Group(message.ToRoom.Id.ToString()).pinMessage(messageViewModel);
+                    }
+                    
                 }//using
             }
             catch (Exception ex)
@@ -327,7 +364,25 @@ namespace Chat.Web.Hubs
                     db.SaveChanges();
 
                     var messageViewModel = Mapper.Map<Message, MessageViewModel>(message);
-                    Clients.Group(message.ToRoom.Id.ToString()).unpinMessage(messageViewModel);
+
+                    if (message.ToUser != null && message.ToUser.Id != "")
+                    {
+                        string userId;
+
+                        if (_ConnectionsMap.TryGetValue(message.ToUser.UserName.ToString(), out userId))
+                        {
+                            Clients.Client(userId).unpinMessage(messageViewModel);
+                        }
+
+                        if (_ConnectionsMap.TryGetValue(message.FromUser.UserName.ToString(), out userId))
+                        {
+                            Clients.Client(userId).unpinMessage(messageViewModel);
+                        }
+                    }
+                    else
+                    {
+                        Clients.Group(message.ToRoom.Id.ToString()).unpinMessage(messageViewModel);
+                    }
 
                 }//using
             }
