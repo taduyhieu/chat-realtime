@@ -50,6 +50,20 @@
             </div>
         </div>
         <div id="pinnedMess">
+            <!-- ko if: pinnedMessages -->
+            <!-- ko if: pinnedMessages.id -->
+            <div class="pinnedMess">
+                <p style="color: blue; font-weight: bold; margin-bottom: 0px;">Tin nhắn ghim</p>
+                <!-- ko if: pinnedMessages.content() != null && pinnedMessages.content().indexOf('post-image') !== -1 -->
+                <span data-bind="click: pointMessage(pinnedMessages.id)">Hình ảnh</span>
+                <!-- /ko -->
+                <!-- ko if: pinnedMessages.content() != null && pinnedMessages.content().indexOf('post-image') === -1 -->
+                <span id="pinnedMess" style="color: #000000;" data-bind="html: pinnedMessages.content, click: pointMessage(pinnedMessages.id)"></span>
+                <!-- /ko -->
+                <button data-bind="click: removeStickMessage" class="btnRemoveStick glyphicon glyphicon-remove"></button>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
         </div>
         <div class="chat-body better-scrollbar">
             <ul data-bind="foreach: chatMessages">
@@ -58,17 +72,17 @@
                         <div class="left-side">
                             <img src="~/Content/icons/avatar1.png" class="message-avatar" data-bind="attr: { src: $data.avatar }" />
                         </div>
-                        <div class="message-content">
+                        <div class="message-content" data-bind="attr: { id: 'message-' + $data.id() }">
                             <span class="author" data-bind="text:$data.from"></span>
                             <span class="timestamp">
                                 <i class="glyphicon glyphicon-time"></i>
-                                <span data-bind="text:$data.timestamp"></span>
+                                <span ></span>
                             </span>
                             <span class="content" data-bind="html:$data.content"></span>
 
                         </div>
                         <div class="stick-message">
-                            <a href="#" id="stick-message" data-bind="click: $parent.stickMess.bind($parent, $data)"><span class="glyphicon glyphicon-pushpin stick"></span></a>
+                            <a href="#" data-bind="click: $parent.stickMess.bind($parent, $data)"><span class="glyphicon glyphicon-pushpin stick"></span></a>
                         </div>
                         
                     </div>

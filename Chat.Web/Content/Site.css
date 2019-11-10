@@ -116,7 +116,7 @@ span {
   color: #ddd;
 }
 span:hover {
-  color: white;
+  color: #157cce;
 }
 .main-container {
   max-width: 1060px;
@@ -286,6 +286,17 @@ span:hover {
 }
 
 .main-container .middle .chat-header .btnEditRoom {
+    position: absolute;
+    top: 12px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    color: #AAA;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.btnRemoveStick {
     position: absolute;
     top: 12px;
     right: 8px;
@@ -600,6 +611,7 @@ input[type="file"] {
     height: 45px;
     border-bottom: 1px solid #80808073;
     border-top: 1px solid #80808073;
+    border-right: 1px solid #80808073;
     padding-left: 10px;
 }
 /*# sourceMappingURL=Site.css.map */

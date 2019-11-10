@@ -1,4 +1,8 @@
-﻿$(function () {
+﻿//function pointMessage(id) {
+//    console.log(id);
+//    document.getElementById('message-' + id).scrollIntoView({ behavior: 'smooth', block: 'center'});
+//}
+$(function () {
 
     var chatHub = $.connection.chatHub;
     $.connection.hub.start().done(function () {
@@ -15,7 +19,29 @@
 
 
     // Client Operations
+    chatHub.client.updateUser = function (userView) {
+        model.userUpdatedOnline(userView.Id, userView.Device);
+    };
+
+    chatHub.client.pinMessage = function (messageView) {
+        var message = new ChatMessage(
+            messageView.Id,
+            messageView.Content,
+            messageView.Timestamp,
+            messageView.From,
+            null,
+            messageView.Avatar,
+            messageView.Stick,
+        );
+        model.pinMess(message);
+    };
+
+    chatHub.client.unpinMessage = function (messageView) {
+        console.log(messageView);
+        model.unpinMess();
+    };
     chatHub.client.newMessage = function (messageView) {
+
         var isMine = messageView.From === model.myName();
         var message = new ChatMessage(
             null,
@@ -49,7 +75,7 @@
     };
 
     chatHub.client.removeUser = function (user) {
-        model.userRemoved(user.id());
+        model.userRemoved(user.Id);
     };
 
     $('#create-room').on('click', function () {
@@ -60,6 +86,7 @@
             model.userCreateRoom.push(model.allUsers[i]);
         }
     });
+
     $('ul#room-list').on('click', 'a', function () {
 
         //var roomName = $(this).text();
@@ -107,7 +134,15 @@
         self.userSelected = ko.observableArray([]);
         self.userCreateRoom = ko.observableArray([]);
         self.chatMessages = ko.observableArray([]);
-        self.pinnedMessages = {};
+        self.pinnedMessages = {
+            id: ko.observable(),
+            content: ko.observable(),
+            timestamp: ko.observable(),
+            from: ko.observable(),
+            isMine: ko.observable(),
+            avatar: ko.observable(),
+            stick: ko.observable(),
+        };
         self.joinedRoom = {
             id: ko.observable(""),
             name: ko.observable(""),
@@ -128,6 +163,7 @@
             return true;
         }
         self.filter = ko.observable("");
+        self.forceUpdate  = ko.observable("");
         self.filteredChatUsers = ko.computed(function () {
             if (!self.filter()) {
                 return ko.utils.arrayFilter(self.chatUsers(), function (user) {
@@ -135,29 +171,22 @@
                     return displayName.includes("");
                 });
             } else {
-                return ko.utils.arrayFilter(self.chatUsers(), function (user) {
-                    var displayName = user.displayName().toLowerCase();
-                    return displayName.includes(self.filter().toLowerCase());
-                });
+                if (self.forceUpdate()) {
+                    return ko.utils.arrayFilter(self.chatUsers(), function (user) {
+                        var displayName = user.displayName().toLowerCase();
+                        return displayName.includes("");
+                    });
+                    self.forceUpdate(null);
+                }
+                else {
+                    return ko.utils.arrayFilter(self.chatUsers(), function (user) {
+                        var displayName = user.displayName().toLowerCase();
+                        return displayName.includes(self.filter().toLowerCase());
+                    });
+                }
+                
             }
         });
-
-        //self.filteredChatUsers = ko.computed(function () {
-        //    console.log("change");
-        //    var ch = false;
-        //    var changedItem = null;
-
-        //    ko.utils.arrayForEach(self.chatUsers(), function (user) {
-        //        var changed = user.device(); //someAChanged registers a change subscription here
-
-        //        if (changed && !ch) {
-        //            ch = true;
-        //            changedItem = user;
-        //        }
-        //    });
-
-        //    return changedItem;
-        //});
     };
 
     Model.prototype = {
@@ -172,6 +201,10 @@
             else {
                 roomId = self.joinedRoom.id;
             }
+            console.log(roomId);
+            console.log(self.myUserId());
+            console.log(self.toUserId());
+            console.log(self.message());
             chatHub.server.send(roomId, self.myUserId(), self.toUserId(), self.message()).done(function (result) {
                 let message = self.chatMessages.pop();
                 let updateMessage = new ChatMessage(
@@ -183,8 +216,6 @@
                     message.avatar(),
                     0
                 );
-                console.log(updateMessage);
-                //message.id = result;
                 self.chatMessages.push(updateMessage);
             });
             self.message("");
@@ -219,6 +250,9 @@
 
         joinSingleRoom: function (toUser) {
             var self = this;
+            self.joinedRoom.id = 0;
+            self.joinedRoom.name = "";
+
             $("#joinedRoom").html("<b>" + toUser.displayName() + "</b>");
             $("#userReceiverId").val(toUser.id());
 
@@ -229,17 +263,60 @@
             });
         },
 
+        pinMess: function (mess) {
+            console.log(mess);
+            var self = this;
+            self.pinnedMessages.id(mess.id());
+            self.pinnedMessages.content(mess.content());
+            self.pinnedMessages.timestamp(mess.timestamp());
+            self.pinnedMessages.from(mess.from());
+            self.pinnedMessages.isMine(mess.isMine());
+            self.pinnedMessages.avatar(mess.avatar());
+            self.pinnedMessages.stick(mess.stick());
+        },
+
+        unpinMess: function () {
+            console.log("aaaaaaaaaa");
+            var self = this;
+            self.pinnedMessages.id(null);
+            self.pinnedMessages.content(null);
+            self.pinnedMessages.timestamp(null);
+            self.pinnedMessages.from(null);
+            self.pinnedMessages.isMine(null);
+            self.pinnedMessages.avatar(null);
+            self.pinnedMessages.stick(null);
+        },
+
         stickMess: function (mess) {
             console.log(mess);
-            let id = mess.id();
-            self.pinnedMessages = mess; 
-            console.log(id);
-            chatHub.server.stickMess(id).done(function (result) {
-                $("#pinnedMess").html('<div class="pinnedMess"><p style="color: blue; font-weight: bold; margin-bottom: 0px;">Tin nhắn ghim</p><span id ="pinnedMess" style ="color: #000000;">' + self.pinnedMessages.content() + '</span></div>');
-            }).fail(function (jqXHR, textStatus) {
-                console.log(jqXHR);
-                console.log(textStatus);
+            var self = this;
+            chatHub.server.stickMess(mess.id()).done(function (result) {
+                self.pinnedMessages.id(mess.id());
+                self.pinnedMessages.content(mess.content());
+                self.pinnedMessages.timestamp(mess.timestamp());
+                self.pinnedMessages.from(mess.from());
+                self.pinnedMessages.isMine(mess.isMine());
+                self.pinnedMessages.avatar(mess.avatar());
+                self.pinnedMessages.stick(mess.stick());
             });
+        },
+
+        removeStickMessage: function () {
+            var self = this;
+            chatHub.server.removeStickMess(self.pinnedMessages.id()).done(function (result) {
+                self.pinnedMessages.id(null);
+                self.pinnedMessages.content(null);
+                self.pinnedMessages.timestamp(null);
+                self.pinnedMessages.from(null);
+                self.pinnedMessages.isMine(null);
+                self.pinnedMessages.avatar(null);
+                self.pinnedMessages.stick(null);
+            });
+        },
+
+
+        pointMessage: function (id) {
+            document.getElementById('message-' + id()).scrollIntoView({ behavior: 'smooth', block: 'center' });
         },
 
         roomList: function () {
@@ -258,12 +335,13 @@
                 self.chatUsers.removeAll();
                 for (var i = 0; i < result.length; i++) {
                     self.chatUsers.push(new ChatUser(
-                        result[i].Id, 
+                        result[i].Id,
                         result[i].UserName,
                         result[i].DisplayName,
                         result[i].Avatar,
                         result[i].CurrentRoom,
-                        result[i].Device))
+                        result[i].Device)
+                    );
                 }
             });
             
@@ -405,6 +483,14 @@
 
         messageHistory: function (fromUserId = null, toUserId = null) {
             var self = this;
+            //set null stick message
+            self.pinnedMessages.id(null);
+            self.pinnedMessages.content(null);
+            self.pinnedMessages.timestamp(null);
+            self.pinnedMessages.from(null);
+            self.pinnedMessages.isMine(null);
+            self.pinnedMessages.avatar(null);
+            self.pinnedMessages.stick(null);
             let roomId;
             if (fromUserId != null && toUserId != null) {
                 roomId = 0;
@@ -413,10 +499,9 @@
                 roomId = self.joinedRoom.id;
             }
             chatHub.server.getMessageHistory(roomId, fromUserId, toUserId).done(function (result) {
-                console.log(result);
                 self.chatMessages.removeAll();
-                self.pinnedMessages = {};
-                $("#pinnedMess").html('');
+
+                
                 if (result) {
                     for (var i = 0; i < result.length; i++) {
                         var isMine = result[i].From == self.myName();
@@ -430,20 +515,16 @@
                             result[i].Stick)
                         )
                         if (result[i].Stick == 1) {
-                            self.pinnedMessages.content = result[i].Content;
-                            self.pinnedMessages.timestamp = result[i].Timestamp;
-                            self.pinnedMessages.from = result[i].From;
-                            self.pinnedMessages.isMine = isMine;
-                            self.pinnedMessages.avatar = result[i].Avatar;
-                            self.pinnedMessages.stick = result[i].Stick;
+                            self.pinnedMessages.id(result[i].Id);
+                            self.pinnedMessages.content(result[i].Content);
+                            self.pinnedMessages.timestamp(result[i].Timestamp);
+                            self.pinnedMessages.from(result[i].From);
+                            self.pinnedMessages.isMine(isMine);
+                            self.pinnedMessages.avatar(result[i].Avatar);
+                            self.pinnedMessages.stick(result[i].Stick);
                         }
                     }
-                    if (self.pinnedMessages.stick != null) {
-                        console.log(self.pinnedMessages.content);
-                        $("#pinnedMess").html('<div class="pinnedMess"><p style="color: blue; font-weight: bold; margin-bottom: 0px;">Tin nhắn ghim</p><span id ="pinnedMess" style ="color: #000000;">' + self.pinnedMessages.content + '</span></div>');
-                    }
-
-                    $(".chat-body").animate({ scrollTop: $(".chat-body")[0].scrollHeight }, 1000);
+                    $(".chat-body").animate({ scrollTop: $(".chat-body")[0].scrollHeight }, 0);
                 }
             }).fail(function (jqXHR, textStatus) {
                 console.log(jqXHR);
@@ -468,25 +549,55 @@
 
         userAdded: function (user) {
             var self = this;
-
-            for (var i = 0; i < self.chatUsers().length; i++) {
-                if (self.chatUsers()[i].id == user.id) {
-                    self.chatUsers()[i].device = user().device;
-                    break;
+            if (self.chatUsers().length > 0) {
+                for (var i = 0; i < self.chatUsers().length; i++) {
+                    if (self.chatUsers()[i].id() == user.id) {
+                        self.chatUsers()[i].device(user().device);
+                        self.forceUpdate("1");
+                        console.log(self.forceUpdate());
+                        break;
+                    }
                 }
             }
         },
 
+        
         userRemoved: function (id) {
             var self = this;
-
-            for (var i = 0; i < self.chatUsers().length; i++) {
-                if (self.chatUsers()[i].id == id) {
-                    self.chatUsers()[i].device = "";
-                    break;
+            if (self.chatUsers().length > 0) {
+                for (var i = 0; i < self.chatUsers().length; i++) {
+                    if (self.chatUsers()[i].id() == id) {
+                        self.chatUsers()[i].device(null);
+                        self.forceUpdate("1");
+                        console.log(self.forceUpdate());
+                        break;
+                    }
                 }
             }
         },
+
+        userUpdatedOnline: function (id, device) {
+            var self = this;
+            console.log("update");
+            //ko.utils.arrayForEach(self.chatUsers(), function (user) {
+            //    console.log(user.id());
+            //});
+
+            console.log(self.chatUsers().length);
+            if (self.chatUsers().length > 0) {
+                for (var i = 0; i < self.chatUsers().length; i++) {
+                    console.log(self.chatUsers()[i].id());
+                    if (self.chatUsers()[i].id() == id) {
+                        self.chatUsers()[i].device(device);
+                        self.forceUpdate("1");
+                        console.log(self.forceUpdate());
+                        break;
+                    }
+                }
+            }
+            
+        },
+
         addUserToRoom: function (user, type) {
             var self = this;
             if (type === 'create') {

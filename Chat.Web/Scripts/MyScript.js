@@ -13,7 +13,7 @@
         //input.val(text);
         input.focus();
     });
-
+    
     $('#emojis-container').on('click', 'a', function () {
         var value = $("input", $(this)).val();
         var input = $('#chat-message');

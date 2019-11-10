@@ -305,6 +305,8 @@ namespace Chat.Web.Hubs
 
                     message.Stick = 1;
                     db.SaveChanges();
+                    var messageViewModel = Mapper.Map<Message, MessageViewModel>(message);
+                    Clients.Group(message.ToRoom.Id.ToString()).pinMessage(messageViewModel);
                 }//using
             }
             catch (Exception ex)
@@ -312,7 +314,29 @@ namespace Chat.Web.Hubs
                 Clients.Caller.onError("Couldn't pin message in room: " + ex.Message);
             }
         }
-            public void DeleteRoom(int roomId)
+
+        public void RemoveStickMess(int Id)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    var message = db.Messages.Where(m => m.Id == Id).FirstOrDefault();
+                    
+                    message.Stick = 0;
+                    db.SaveChanges();
+
+                    var messageViewModel = Mapper.Map<Message, MessageViewModel>(message);
+                    Clients.Group(message.ToRoom.Id.ToString()).unpinMessage(messageViewModel);
+
+                }//using
+            }
+            catch (Exception ex)
+            {
+                Clients.Caller.onError("Couldn't remove pin message in room: " + ex.Message);
+            }
+        }
+        public void DeleteRoom(int roomId)
         {
             try
             {
@@ -522,6 +546,8 @@ namespace Chat.Web.Hubs
                     _Users.Remove(tempUser);
 
                     _Users.Add(userViewModel);
+
+                    Clients.All.UpdateUser(userViewModel);
                     _Connections.Add(userViewModel);
                     _ConnectionsMap.Add(IdentityName, Context.ConnectionId);
 
@@ -546,7 +572,7 @@ namespace Chat.Web.Hubs
 
                 tempUser.Device = "";
                 _Users.Add(tempUser);
-
+                Clients.All.UpdateUser(tempUser);
                 var user = _Connections.Where(u => u.UserName == IdentityName).FirstOrDefault();
                 _Connections.Remove(user);
 
