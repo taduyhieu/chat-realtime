@@ -19,6 +19,9 @@ $(function () {
 
 
     // Client Operations
+    chatHub.client.updateChatRoom = function(roomView){
+        model.userRoomList(roomView.Id);
+    };
     chatHub.client.updateUser = function (userView) {
         model.userUpdatedOnline(userView.Id, userView.Device);
     };
@@ -45,7 +48,7 @@ $(function () {
 
         var isMine = messageView.From === model.myName();
         var message = new ChatMessage(
-            null,
+            messageView.Id,
             messageView.Content,
             messageView.Timestamp,
             messageView.From,
@@ -354,6 +357,7 @@ $(function () {
 
             chatHub.server.getUsersRoom(roomId).done(function (result) {
                 self.chatUserRooms.removeAll();
+                $("#userRoom").html("");
                 for (var i = 0; i < result.length; i++) {
                     $("#userRoom").append(result[i].DisplayName + ",");
                     self.chatUserRooms.push(new ChatUser(

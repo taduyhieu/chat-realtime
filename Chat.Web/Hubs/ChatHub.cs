@@ -263,6 +263,11 @@ namespace Chat.Web.Hubs
                                 {
                                     Clients.Client(userId).removeChatRoom(roomViewModel);
                                 }
+                            } else {
+                                if (_ConnectionsMap.TryGetValue(userRoom.User.UserName, out userId))
+                                {
+                                    Clients.Client(userId).updateChatRoom(roomViewModel);
+                                }
                             }
                             
                         }
@@ -277,7 +282,6 @@ namespace Chat.Web.Hubs
                                     Clients.Client(userId).addChatRoom(roomViewModel);
                                 }
                             }
-                            
                         }
                     }
                 } //using
