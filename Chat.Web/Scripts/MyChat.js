@@ -371,6 +371,7 @@ $(function () {
                     ))
                 }
                 self.editPermissionRoom = '0';
+                $('#edit-room').html('');
                 for (let i = 0; i < self.chatUserRooms().length; i++) {
                     if (self.chatUserRooms()[i].id() == self.myUserId() && self.chatUserRooms()[i].roomRole() == 1) {
                         self.editPermissionRoom = '1';
