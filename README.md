@@ -13,11 +13,11 @@
   * Mở SQL Server Management Studio sau khi bước 1.1 và 1.2 thành công: 
     * Tạo mới cơ sở dữ liệu có tên: chatrealtime
   * Mở sourcecode bằng Visual Studio:
-    * Tạo kết nối với cơ sở dữ liệu local bằng cách thay đổi file 'Web.config':
+    * Tạo kết nối với cơ sở dữ liệu local bằng cách thay đổi file `Web.config`:
       * Data Source = `Tên SQL Server`
       * Initial Catalog =`Tên cơ sở dữ liệu` => `chatrealtime`
   * Build code bằng:      
-  * Sau khi thành công chạy lệnh cập nhật cơ sở dữ liệu: 'update-database'
+  * Sau khi thành công chạy lệnh cập nhật cơ sở dữ liệu `update-database`
 ### 4. Chạy project và sử dụng
    * 
 ## II. Cách sử dụng các tính năng
@@ -42,6 +42,6 @@
         * Nhấp tin nhắn và nhấn Enter
 ### 5. Ghim tin nhắn
   * Mở cửa sổ chat theo nhóm hoặc cá nhân
-  * Click vào biểu tượng 'ghim' cạnh mỗi tin nhắn
+  * Click vào biểu tượng `ghim` cạnh mỗi tin nhắn
   * Click vào tin nhắn đã ghim thì sẽ thấy cửa sổ tin nhắn tự cuộn về vị trí tin nhắn đã được ghim
    
