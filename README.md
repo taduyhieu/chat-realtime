@@ -14,6 +14,6 @@ I. Cài đặt
       Data Source=[Tên SQL Server]
       Initial Catalog=[Tên cơ sở dữ liệu] => chatrealtime
   - Build code bằng:      
-  - Sau khi thành công chạy lệnh cập nhật cơ sở dữ liệu: "updata-database"
+  - Sau khi thành công chạy lệnh cập nhật cơ sở dữ liệu: "update-database"
 3. Chạy project và sử dụng
 II. 
