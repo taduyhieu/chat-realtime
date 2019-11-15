@@ -28,7 +28,7 @@
   * Tạo nhóm
     * Nhấn vào dấu `+` ở phía bên trên, trái để thấy giao diện tạo nhóm
     * Đặt tên nhóm và thêm các thành viên.
-  * Sửa nhóm (chỉ người - quản trị viên tạo được sửa nhóm)
+  * Sửa nhóm - chỉ quản trị viên tạo được sửa nhóm
     * Click vào biểu tượng edit ở phía trên khi mở nhóm
     * Thực hiện thay đổi và nhấn `Cập nhật`
 ### 3. Cập nhật trạng thái trực tuyến tài khoản
@@ -42,6 +42,6 @@
         * Nhấp tin nhắn và nhấn Enter
 ### 5. Ghim tin nhắn
   * Mở cửa sổ chat theo nhóm hoặc cá nhân
-  * Click vào biểu tượng "ghim" cạnh mỗi tin nhắn
+  * Click vào biểu tượng 'ghim' cạnh mỗi tin nhắn
   * Click vào tin nhắn đã ghim thì sẽ thấy cửa sổ tin nhắn tự cuộn về vị trí tin nhắn đã được ghim
    
