@@ -17,7 +17,7 @@
   
 ### 3. Mở sourcecode bằng Visual Studio và build   
   * Mở sourcecode bằng cách open Project từ Visual Studio, sau đó chọn file `Chat.sln` trong sourcecode
-  
+  ** Lưu ý: Clone sourccode ở nhánh `master` để ổn định nhất!
 ### 4. Thêm cơ sở dữ liệu
 
   * Mở SQL Server Management Studio: 
