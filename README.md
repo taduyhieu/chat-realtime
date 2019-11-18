@@ -6,7 +6,7 @@
 ##I. Cài đặt
 #### 1. Môi trường, công cụ
 
-  1.1 SQL Server: [Link](https://go.microsoft.com/fwlink/?linkid=866662)
+  1.1 SQL Server 2018: [Link](https://go.microsoft.com/fwlink/?linkid=866662)
   
   1.2 SQL Server Management Studio (SSMS): [Link](https://aka.ms/ssmsfullsetup)
   
@@ -16,12 +16,11 @@
   * Mở SQL Server Management Studio (SSMS) tạo mới CSDL có tên: `chatrealtime`   
   
 ### 3. Mở sourcecode bằng Visual Studio và build   
-
-  * Sau khi mở sourcecode: Click chuột phải vào Solution, chọn Build Solution
+  * Mở sourcecode bằng cách open Project từ Visual Studio, sau đó chọn file `Chat.sln` trong sourcecode
   
 ### 4. Thêm cơ sở dữ liệu
 
-  * Mở SQL Server Management Studio sau khi bước 1.1 và 1.2 thành công: 
+  * Mở SQL Server Management Studio: 
     * Tạo mới cơ sở dữ liệu có tên: chatrealtime
     
   * Mở sourcecode bằng Visual Studio:
@@ -30,8 +29,11 @@
       * Initial Catalog =`Tên cơ sở dữ liệu` => `chatrealtime`      
   
   * Sau khi thành công chạy lệnh cập nhật cơ sở dữ liệu `update-database`
-  
+### 5. Chạy project 
+  * Click chuột phải vào Solution cảu project trong Visual Studio, chọn Build Solution 
+     
 ### 5. Chạy project và sử dụng
+  * Trong Visual Studio, nhấn `Ctrl + F5` để chạy
 
 ## II. Cách sử dụng các tính năng
 
@@ -73,3 +75,4 @@
   * Click vào biểu tượng `ghim` cạnh mỗi tin nhắn
   * Click vào tin nhắn đã ghim thì sẽ thấy cửa sổ tin nhắn tự cuộn về vị trí tin nhắn đã được ghim
    
+###### Nếu có thắc mắc về sourcecode và cách sử dụng có thể mail về: `taduyhieucntt98@gmail.com`
