@@ -19,8 +19,7 @@ $(function () {
 
 
     // Client Operations
-    chatHub.client.updateChatRoom = function (roomView) {
-        console.log("update room");
+    chatHub.client.updateChatRoom = function(roomView){
         model.userRoomList(roomView.Id);
     };
     chatHub.client.updateUser = function (userView) {
@@ -358,7 +357,7 @@ $(function () {
 
             chatHub.server.getUsersRoom(roomId).done(function (result) {
                 self.chatUserRooms.removeAll();
-                $("#userRoom").html('');
+                $("#userRoom").html("");
                 for (var i = 0; i < result.length; i++) {
                     $("#userRoom").append(result[i].DisplayName + ",");
                     self.chatUserRooms.push(new ChatUser(
